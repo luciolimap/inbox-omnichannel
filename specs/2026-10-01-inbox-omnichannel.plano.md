@@ -10,6 +10,9 @@
 
 **Spec:** `specs/2026-10-01-inbox-omnichannel.md`
 
+**Execução:** `subagent-driven-development`. O agente pai planeja, revisa e commita
+em Opus; cada tarefa é despachada a um subagente com `model: "sonnet"`.
+
 ## Global Constraints
 
 - Java 21 (JDK instalado: `21.0.11`). Build por `./mvnw` — Maven **não** está instalado na máquina; o wrapper vem do zip do Spring Initializr.
@@ -54,7 +57,7 @@ smartspace-projeto/
 │   │   ├── application.yml
 │   │   └── db/migration/V1__schema.sql
 │   ├── src/main/java/com/smartspace/inbox/
-│   │   ├── InboxApplication.java
+│   │   ├── CoreApplication.java          Vem do Initializr, nome mantido
 │   │   ├── DataInitializer.java          Semeia dois agentes se a tabela está vazia
 │   │   ├── agent/      Agent, Role, AgentRepository, AgentController, AgentDto
 │   │   ├── auth/       JwtService, JwtAuthFilter, SecurityConfig, AuthController, dtos
@@ -307,6 +310,9 @@ Run: `cd core && ./mvnw -B -q compile`
 Expected: exit 0, sem saída.
 
 - [ ] **Step 3: Escrever `core/src/main/resources/application.yml`**
+
+Apagar o `application.properties` que veio do Initializr antes — os dois juntos
+fazem o `properties` ganhar e a configuração do `yml` ser ignorada em silêncio.
 
 ```yaml
 spring:
