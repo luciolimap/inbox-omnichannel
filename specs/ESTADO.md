@@ -21,9 +21,13 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
   `AgentController`, `ApiExceptionHandler`, `DataInitializer` com os dois agentes semeados.
   `./mvnw -B test` → `Tests run: 9, Failures: 0`, `BUILD SUCCESS`.
 
+- **Task 4 fechada.** `MessageDto`, `ConversationSummary`, `ConversationDetail`,
+  `ConversationService` e `ConversationController` com `GET /api/conversations` e o detalhe.
+  `./mvnw -B test` → `Tests run: 13, Failures: 0`, `BUILD SUCCESS`.
+
 ## Pendente para retomar
 
-1. **Task 4**: leitura de conversas, lista e detalhe.
+1. **Task 5**: ingestão de mensagem de canal, idempotente, em `POST /internal/inbound`.
 
 2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
