@@ -34,9 +34,13 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
   e `ConversationServiceTest` sem banco. `./mvnw -B test` → `Tests run: 27, Failures: 0`.
   O core está completo; falta o gateway Node e o front.
 
+- **Task 7 fechada.** `gateway/` em Fastify: `env.ts`, `channels/{types,simulated,registry}.ts`,
+  `core-client.ts`, `realtime.ts`, `server.ts` e `main.ts`.
+  `npm test` → `Tests 8 passed (8)`; `npm run lint` (`tsc --noEmit`) → exit 0.
+
 ## Pendente para retomar
 
-1. **Task 7**: gateway em Fastify, contrato de canal e canais simulados.
+1. **Task 8**: Telegram real e WebSocket ao vivo no gateway. Precisa de token do @BotFather.
 
 2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
@@ -55,6 +59,9 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
 - Teste de integração é `@Transactional`. O container do PostgreSQL é único para a suíte, então
   sem rollback por teste o dado de um teste entra na asserção de ordem do outro. O plano original
   não previa isso e o `ConversationRepositoryIT` falhou com `[1L, 3L, 2L]` antes da correção.
+- O ponto de entrada do gateway é `gateway/src/main.ts`, não um guard de `import.meta.url` no fim
+  do `server.ts`. O guard compara caminhos e erra no Windows por causa da barra invertida; com
+  arquivo separado o teste importa `buildServer` sem abrir porta.
 - Em `persistReply`, a mensagem é persistida por `messages.saveAndFlush`, não pelo cascade de
   `conversations.save`. `save` numa conversa que já tem id chama `em.merge`, que copia a mensagem
   nova: o id nasce na cópia gerenciada e a instância local fica com `id` nulo, o que quebrava o
