@@ -1,0 +1,44 @@
+/* Bootstrap ja traz o tema claro e escuro; o atributo vem do sistema do usuario. */
+:root {
+  color-scheme: light dark;
+}
+
+.inbox-layout {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) 1fr;
+}
+
+.inbox-list {
+  overflow-y: auto;
+  border-right: 1px solid var(--bs-border-color);
+}
+
+.inbox-thread {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 0;
+}
+
+.inbox-messages {
+  overflow-y: auto;
+}
+
+.message-bubble {
+  max-width: min(42rem, 80%);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Abaixo de 768px as duas colunas viram uma: a lista sai de cena quando uma
+   conversa esta aberta, que e como todo inbox de celular se comporta. */
+@media (max-width: 767.98px) {
+  .inbox-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .inbox-layout[data-thread-open="true"] .inbox-list,
+  .inbox-layout[data-thread-open="false"] .inbox-thread {
+    display: none;
+  }
+}

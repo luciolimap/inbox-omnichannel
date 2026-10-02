@@ -41,6 +41,11 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
 - **Task 8 fechada no código.** `channels/telegram.ts`, registro condicional ao
   `TELEGRAM_BOT_TOKEN` e `GET /channels`. `npm test` → `Tests 12 passed (12)`; lint exit 0.
 
+- **Task 9 fechada.** `web/` em Vite + React + TypeScript com Bootstrap 5: `api.ts`, `auth.tsx`,
+  `pages/Login.tsx`, `styles.css`, `App.tsx`, `main.tsx`. `npm run build` → `built in 807ms`.
+  Login provado contra o core de pé, com `Origin: http://localhost:5173`:
+  `HTTP/1.1 200`, `Access-Control-Allow-Origin: http://localhost:5173`, `"role":"AGENT"`.
+
 ## Pendente para retomar
 
 1. **Task 8 Step 7, prova ponta a ponta do Telegram: depende do Lucio.** Criar o bot no
@@ -50,7 +55,7 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
    Esperado: `{"ok":true,"result":true,"description":"Webhook was set"}`. Isso fecha o
    critério de aceite 4, que pede GIF com o celular visível no `README.md`.
 
-2. **Task 9**: web em Vite, Bootstrap, login e sessão.
+2. **Task 10**: o inbox em si, com atualização ao vivo e layout responsivo.
 
 2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
@@ -69,6 +74,9 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
 - Teste de integração é `@Transactional`. O container do PostgreSQL é único para a suíte, então
   sem rollback por teste o dado de um teste entra na asserção de ordem do outro. O plano original
   não previa isso e o `ConversationRepositoryIT` falhou com `[1L, 3L, 2L]` antes da correção.
+- O `lint` do `web` é `tsc -b --noEmit`, não `tsc --noEmit`. O template do Vite põe as opções
+  reais em `tsconfig.app.json`, e sem `-b` o lint passava verde em código que o `build` reprovava
+  com `error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled`.
 - O ponto de entrada do gateway é `gateway/src/main.ts`, não um guard de `import.meta.url` no fim
   do `server.ts`. O guard compara caminhos e erra no Windows por causa da barra invertida; com
   arquivo separado o teste importa `buildServer` sem abrir porta.
