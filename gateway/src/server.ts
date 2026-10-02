@@ -64,6 +64,13 @@ export function buildServer(): FastifyInstance {
     return reply.status(200).send({ ok: true });
   });
 
+  server.get("/channels", async () =>
+    allAdapters().map((adapter) => ({
+      channel: adapter.channel,
+      simulated: adapter.outbox !== undefined,
+    })),
+  );
+
   server.get("/simulated/outbox", async () =>
     allAdapters().flatMap((adapter) =>
       (adapter.outbox ?? []).map((enviada) => ({ channel: adapter.channel, ...enviada })),

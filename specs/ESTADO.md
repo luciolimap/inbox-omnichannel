@@ -38,9 +38,19 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
   `core-client.ts`, `realtime.ts`, `server.ts` e `main.ts`.
   `npm test` → `Tests 8 passed (8)`; `npm run lint` (`tsc --noEmit`) → exit 0.
 
+- **Task 8 fechada no código.** `channels/telegram.ts`, registro condicional ao
+  `TELEGRAM_BOT_TOKEN` e `GET /channels`. `npm test` → `Tests 12 passed (12)`; lint exit 0.
+
 ## Pendente para retomar
 
-1. **Task 8**: Telegram real e WebSocket ao vivo no gateway. Precisa de token do @BotFather.
+1. **Task 8 Step 7, prova ponta a ponta do Telegram: depende do Lucio.** Criar o bot no
+   `@BotFather`, pôr o token em `.env` como `TELEGRAM_BOT_TOKEN`, expor a porta 3000
+   (`npx --yes localtunnel --port 3000`) e registrar o webhook:
+   `curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=<url-do-tunel>/webhooks/telegram"`.
+   Esperado: `{"ok":true,"result":true,"description":"Webhook was set"}`. Isso fecha o
+   critério de aceite 4, que pede GIF com o celular visível no `README.md`.
+
+2. **Task 9**: web em Vite, Bootstrap, login e sessão.
 
 2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
