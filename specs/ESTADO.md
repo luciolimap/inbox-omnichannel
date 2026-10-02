@@ -29,9 +29,14 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
   `ConversationService.ingest` idempotente por `externalMessageId`.
   `./mvnw -B test` → `Tests run: 19, Failures: 0`, `BUILD SUCCESS`.
 
+- **Task 6 fechada.** `GatewayClient`, `ReplyRequest`, `AssignRequest`, `StatusRequest`,
+  `ReplyPrepared`, as rotas `POST /{id}/messages`, `PATCH /{id}/assign`, `PATCH /{id}/status`,
+  e `ConversationServiceTest` sem banco. `./mvnw -B test` → `Tests run: 27, Failures: 0`.
+  O core está completo; falta o gateway Node e o front.
+
 ## Pendente para retomar
 
-1. **Task 6**: responder, atribuir, resolver, e despacho ao gateway.
+1. **Task 7**: gateway em Fastify, contrato de canal e canais simulados.
 
 2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
@@ -50,6 +55,10 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
 - Teste de integração é `@Transactional`. O container do PostgreSQL é único para a suíte, então
   sem rollback por teste o dado de um teste entra na asserção de ordem do outro. O plano original
   não previa isso e o `ConversationRepositoryIT` falhou com `[1L, 3L, 2L]` antes da correção.
+- Em `persistReply`, a mensagem é persistida por `messages.saveAndFlush`, não pelo cascade de
+  `conversations.save`. `save` numa conversa que já tem id chama `em.merge`, que copia a mensagem
+  nova: o id nasce na cópia gerenciada e a instância local fica com `id` nulo, o que quebrava o
+  `markDelivery` com `InvalidDataAccessApiUsageException: The given id must not be null`.
 - O surefire tem `<includes>` com `**/*IT.java`. O critério de aceite 6 roda `./mvnw test`, e o
   padrão do surefire só pega `*Test`: sem o include, os testes que sobem o PostgreSQL ficavam
   de fora e `./mvnw test` passava com um teste só.

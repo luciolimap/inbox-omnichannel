@@ -1,5 +1,7 @@
 package com.smartspace.inbox.conversation;
 
+import com.smartspace.inbox.agent.Agent;
+import com.smartspace.inbox.agent.AgentRepository;
 import com.smartspace.inbox.contact.Contact;
 import com.smartspace.inbox.contact.ContactRepository;
 import com.smartspace.inbox.inbound.InboundRequest;
@@ -16,13 +18,57 @@ public class ConversationService {
     private final ConversationRepository conversations;
     private final ContactRepository contacts;
     private final MessageRepository messages;
+    private final AgentRepository agents;
 
     public ConversationService(ConversationRepository conversations,
                                ContactRepository contacts,
-                               MessageRepository messages) {
+                               MessageRepository messages,
+                               AgentRepository agents) {
         this.conversations = conversations;
         this.contacts = contacts;
         this.messages = messages;
+        this.agents = agents;
+    }
+
+    @Transactional
+    public ReplyPrepared persistReply(Long conversationId, ReplyRequest request, Agent agent) {
+        Conversation conversation = buscar(conversationId);
+        Message message = Message.outbound(request.body(), agent);
+        conversation.addMessage(message);
+        // A mensagem e persistida direto, nao pelo cascade de conversations.save:
+        // save numa conversa que ja tem id chama em.merge, que copia a mensagem
+        // nova e deixa o id na copia, enquanto quem chama precisa do id aqui para
+        // o markDelivery depois do despacho.
+        Message salva = messages.saveAndFlush(message);
+        return new ReplyPrepared(
+                MessageDto.from(salva),
+                conversation.getChannel(),
+                conversation.getContact().getExternalId());
+    }
+
+    @Transactional
+    public MessageDto markDelivery(Long messageId, DeliveryStatus status) {
+        Message message = messages.findById(messageId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "mensagem " + messageId + " nao existe"));
+        message.setDeliveryStatus(status);
+        messages.save(message);
+        return MessageDto.from(message);
+    }
+
+    @Transactional
+    public ConversationDetail assign(Long conversationId, Long agentId) {
+        Conversation conversation = buscar(conversationId);
+        Agent agent = agents.findById(agentId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "agente " + agentId + " nao existe"));
+        conversation.setAssignedAgent(agent);
+        return ConversationDetail.from(conversations.save(conversation));
+    }
+
+    @Transactional
+    public ConversationDetail changeStatus(Long conversationId, ConversationStatus status) {
+        Conversation conversation = buscar(conversationId);
+        conversation.setStatus(status);
+        return ConversationDetail.from(conversations.save(conversation));
     }
 
     @Transactional

@@ -1,5 +1,6 @@
 package com.smartspace.inbox.conversation;
 
+import com.smartspace.inbox.agent.AgentRepository;
 import com.smartspace.inbox.contact.Contact;
 import com.smartspace.inbox.contact.ContactRepository;
 import com.smartspace.inbox.support.PostgresIT;
@@ -12,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +32,9 @@ class ConversationApiIT extends PostgresIT {
 
     @Autowired
     ConversationRepository conversations;
+
+    @Autowired
+    AgentRepository agents;
 
     String token;
 
@@ -84,6 +89,78 @@ class ConversationApiIT extends PostgresIT {
         mvc.perform(get("/api/conversations/99999").header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("not_found"));
+    }
+
+    @Test
+    void responder_com_corpo_vazio_devolve_400() throws Exception {
+        Conversation conversa = criarConversaCom("oi");
+
+        mvc.perform(post("/api/conversations/" + conversa.getId() + "/messages")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"body":"   "}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("requisicao_invalida"));
+    }
+
+    @Test
+    void responder_acima_de_4096_caracteres_devolve_400() throws Exception {
+        Conversation conversa = criarConversaCom("oi");
+        String gigante = "a".repeat(4097);
+
+        mvc.perform(post("/api/conversations/" + conversa.getId() + "/messages")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"" + gigante + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // O gateway nao existe na suite, entao todo despacho falha de verdade. E
+    // exatamente o cenario que se quer provar: a resposta do agente nao se perde.
+    @Test
+    void gateway_fora_do_ar_salva_a_mensagem_como_falha_e_devolve_502() throws Exception {
+        Conversation conversa = criarConversaCom("oi");
+
+        mvc.perform(post("/api/conversations/" + conversa.getId() + "/messages")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"body":"ja estou vendo"}"""))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.deliveryStatus").value("FAILED"))
+                .andExpect(jsonPath("$.body").value("ja estou vendo"));
+
+        mvc.perform(get("/api/conversations/" + conversa.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.messages[1].body").value("ja estou vendo"))
+                .andExpect(jsonPath("$.messages[1].deliveryStatus").value("FAILED"));
+    }
+
+    @Test
+    void atribuir_e_resolver_persistem() throws Exception {
+        Conversation conversa = criarConversaCom("oi");
+        Long agenteId = agents.findByEmail("agente@smartspace.test").orElseThrow().getId();
+
+        mvc.perform(patch("/api/conversations/" + conversa.getId() + "/assign")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"agentId\":" + agenteId + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignedAgent.name").value("Agente Demo"));
+
+        mvc.perform(patch("/api/conversations/" + conversa.getId() + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"RESOLVED"}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RESOLVED"));
+
+        mvc.perform(get("/api/conversations/" + conversa.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.status").value("RESOLVED"))
+                .andExpect(jsonPath("$.assignedAgent.email").value("agente@smartspace.test"));
     }
 
     private Conversation criarConversaCom(String texto) {
