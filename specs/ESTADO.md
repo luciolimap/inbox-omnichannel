@@ -25,9 +25,13 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
   `ConversationService` e `ConversationController` com `GET /api/conversations` e o detalhe.
   `./mvnw -B test` → `Tests run: 13, Failures: 0`, `BUILD SUCCESS`.
 
+- **Task 5 fechada.** `InboundRequest`, `InternalTokenFilter`, `InboundController` e
+  `ConversationService.ingest` idempotente por `externalMessageId`.
+  `./mvnw -B test` → `Tests run: 19, Failures: 0`, `BUILD SUCCESS`.
+
 ## Pendente para retomar
 
-1. **Task 5**: ingestão de mensagem de canal, idempotente, em `POST /internal/inbound`.
+1. **Task 6**: responder, atribuir, resolver, e despacho ao gateway.
 
 2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
