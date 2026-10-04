@@ -65,9 +65,6 @@ no web, `./mvnw -B test` no core com Testcontainers, `npm test` no gateway e
 `docker build` das três imagens. O `build-images` só roda se os quatro anteriores
 passarem.
 
-Último verde em `main`:
-<https://github.com/luciolimap/inbox-omnichannel/actions/runs/37173744935>
-
 ## Stack
 
 Java 21 · Spring Boot 3.5.16 · Spring Security · JPA · Flyway · PostgreSQL 16 ·
