@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "tsc -b --noEmit",
+    "lint": "oxlint src && tsc -b --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {

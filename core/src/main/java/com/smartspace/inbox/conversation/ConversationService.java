@@ -93,8 +93,16 @@ public class ConversationService {
 
         Message message = Message.inbound(request.body(), request.externalMessageId());
         conversation.addMessage(message);
-        conversations.save(conversation);
-        return MessageDto.from(message);
+        if (conversation.getId() == null) {
+            // Conversa nova: o persist em cascata grava a mensagem na propria
+            // instancia, entao o id chega aqui.
+            conversations.save(conversation);
+            return MessageDto.from(message);
+        }
+        // Conversa que ja existe: a mesma armadilha do persistReply. save chamaria
+        // em.merge, que copia a mensagem e deixa o id na copia, e o DTO sairia com
+        // id nulo contra CoreMessage.id do gateway.
+        return MessageDto.from(messages.saveAndFlush(message));
     }
 
     @Transactional(readOnly = true)

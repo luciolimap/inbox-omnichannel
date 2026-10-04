@@ -73,6 +73,18 @@ class InboundApiIT extends PostgresIT {
         assertThat(quantas).isEqualTo(2);
     }
 
+    // conversations.save numa conversa que ja tem id chama em.merge, que copia a
+    // mensagem nova: o id nasce na copia gerenciada e a instancia local, que e a
+    // que vira MessageDto, fica sem id. O gateway tipa CoreMessage.id como number.
+    @Test
+    void segunda_mensagem_do_mesmo_contato_devolve_id() throws Exception {
+        mvc.perform(inbound("chat-500", "telegram:500", "primeira")).andExpect(status().isOk());
+
+        mvc.perform(inbound("chat-500", "telegram:501", "segunda"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNumber());
+    }
+
     @Test
     void sem_token_interno_devolve_401() throws Exception {
         mvc.perform(post("/internal/inbound")
