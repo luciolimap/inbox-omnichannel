@@ -16,6 +16,16 @@ docker compose up -d --build
 
 Abra <http://localhost:8081> e entre com `agente@smartspace.test` / `senha123`.
 
+Esse par é semeado só fora de produção. Em servidor exposto, ponha no `.env`:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod
+SEED_ADMIN_PASSWORD=<uma senha sua>
+```
+
+Com `prod` ativo o core não sobe sem `SEED_ADMIN_PASSWORD`, para nenhuma
+instância nascer com senha conhecida.
+
 Sem token do Telegram o inbox funciona inteiro pelos canais simulados: o botão
 **Simular** injeta uma mensagem pelo mesmo contrato de webhook que o Telegram usa.
 

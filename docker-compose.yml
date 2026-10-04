@@ -21,6 +21,8 @@ services:
       DB_HOST: postgres
       DB_PASSWORD: ${POSTGRES_PASSWORD:-inbox_dev}
       JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
       INTERNAL_TOKEN: ${INTERNAL_TOKEN:?defina INTERNAL_TOKEN no .env}
       GATEWAY_URL: http://gateway:3000
     ports:

@@ -19,6 +19,10 @@ inbox:
     secret: ${JWT_SECRET:segredo-de-desenvolvimento-com-mais-de-32-chars}
     ttl-minutes: 480
   internal-token: ${INTERNAL_TOKEN:token-interno-de-desenvolvimento}
+  seed:
+    # Vazia de proposito: fora de producao o seed cai na senha de demonstracao,
+    # e com o perfil prod ativo a ausencia dela para o boot.
+    admin-password: ${SEED_ADMIN_PASSWORD:}
   gateway-url: ${GATEWAY_URL:http://localhost:3000}
 
 server:
