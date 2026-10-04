@@ -100,10 +100,9 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 4. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
 
-5. **Avisos do Actions, nenhum quebra o build.** `setup-java v4 is deprecated and will no
-   longer receive updates` pede `actions/setup-java@v5`; `actions/checkout@v4` e
-   `actions/setup-node@v4` ainda miram Node 20 e o runner força Node 24. O
-   `ubuntu-latest` migra para Ubuntu 26 em 19/10/2026. Nada tocado: aviso não é falha.
+5. **Avisos do Actions, nenhum quebra o build.** `actions/setup-java` já está em `@v5`.
+   Restam `actions/checkout@v4` e `actions/setup-node@v4`, que ainda miram Node 20 e o
+   runner força Node 24, e a migração do `ubuntu-latest` para Ubuntu 26 em 19/10/2026.
 
 ## Onde cada critério de aceite está
 
