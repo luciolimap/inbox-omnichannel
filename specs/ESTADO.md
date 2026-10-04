@@ -1,6 +1,6 @@
-# Estado em 02/10/2026
+# Estado em 03/10/2026
 
-Vaga fecha em 08/10/2026. Restam 6 dias.
+Vaga fecha em 08/10/2026. Restam 5 dias.
 
 ## Pronto
 
@@ -46,6 +46,26 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
   Login provado contra o core de pé, com `Origin: http://localhost:5173`:
   `HTTP/1.1 200`, `Access-Control-Allow-Origin: http://localhost:5173`, `"role":"AGENT"`.
 
+- **Task 10 fechada.** `realtime.ts`, `pages/Inbox.tsx` e os cinco componentes
+  (`ConversationList`, `MessageThread`, `Composer`, `ChannelBadge`, `StatusBadge`).
+  `npm run lint` → exit 0; `npm run build` → `built in 929ms`. Commit `45b8aee`.
+  No mesmo commit, o `GatewayClient` passou a fixar `HTTP/1.1`: no padrão `HTTP_2` o
+  cliente tenta upgrade h2c, que o Fastify não fala, e o POST chegava com o corpo
+  descasado do `Content-Length` (`FST_ERR_CTP_INVALID_CONTENT_LENGTH`).
+
+- **Task 11 fechada.** `core/Dockerfile`, `gateway/Dockerfile`, `web/Dockerfile`,
+  `web/nginx.conf`, `docker-compose.yml` com os quatro serviços e `.gitlab-ci.yml`.
+  `docker compose up -d --build` → `postgres core gateway web` todos `running`.
+  Volta completa provada pelos containers: webhook simulado, conversa criada,
+  resposta com `deliveryStatus: SENT`, mensagem no `/simulated/outbox` do gateway.
+  Commit `3768b3d`.
+
+- **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
+  1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
+  emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
+  persistem depois de `docker compose restart core`; `./mvnw -B test` →
+  `Tests run: 27, Failures: 0`; `npm test` do gateway → `Tests 12 passed (12)`.
+
 ## Pendente para retomar
 
 1. **Task 8 Step 7, prova ponta a ponta do Telegram: depende do Lucio.** Criar o bot no
@@ -55,9 +75,14 @@ Vaga fecha em 08/10/2026. Restam 6 dias.
    Esperado: `{"ok":true,"result":true,"description":"Webhook was set"}`. Isso fecha o
    critério de aceite 4, que pede GIF com o celular visível no `README.md`.
 
-2. **Task 10**: o inbox em si, com atualização ao vivo e layout responsivo.
+2. **`docs/inbox.gif` e `docs/mobile.png` não existem: dependem do Lucio.** O
+   `README.md` já referencia os dois, então as duas imagens aparecem quebradas até a
+   gravação. O GIF fecha o critério 4 (Telegram ponta a ponta, celular visível) e
+   depende do mesmo bot do item 1. O PNG fecha o critério 7: abrir
+   <http://localhost:8081> no DevTools a 375px e conferir que não há scroll
+   horizontal e que a lista sai de cena com conversa aberta.
 
-2. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
+3. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
    `glab` não está instalado. Decidir entre `winget install glab.glab` ou criar o projeto no
    GitLab pela web e só acrescentar o remote. `gh` já está autenticado para o espelho no GitHub.
