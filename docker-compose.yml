@@ -41,6 +41,7 @@ services:
       CORE_URL: http://core:8080
       INTERNAL_TOKEN: ${INTERNAL_TOKEN:?defina INTERNAL_TOKEN no .env}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
     ports:
       - "3000:3000"
     depends_on:

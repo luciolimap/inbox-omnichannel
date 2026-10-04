@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 process.env.INTERNAL_TOKEN = "token-de-teste";
 process.env.TELEGRAM_BOT_TOKEN = "123:fake";
+// env.ts recusa bot sem segredo de webhook, porque o canal subiria recusando
+// todo update inbound.
+process.env.TELEGRAM_WEBHOOK_SECRET = "segredo-de-teste";
 
 const { telegramAdapter } = await import("../src/channels/telegram.js");
 

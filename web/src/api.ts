@@ -6,6 +6,12 @@ export function setToken(novo: string | null): void {
   token = novo;
 }
 
+// O webhook simulado do gateway exige o mesmo Bearer das chamadas ao core, e o
+// token mora aqui. Exportar o header evita uma segunda leitura do localStorage.
+export function authHeader(): Record<string, string> {
+  return token === null ? {} : { Authorization: `Bearer ${token}` };
+}
+
 export class ApiError extends Error {
   // Campo declarado e atribuido no corpo, nao parameter property: o tsconfig do
   // template liga erasableSyntaxOnly, que recusa a forma curta.
@@ -22,7 +28,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     method,
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-      ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
+      ...authHeader(),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });

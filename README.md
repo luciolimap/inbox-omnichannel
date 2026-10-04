@@ -20,7 +20,17 @@ Sem token do Telegram o inbox funciona inteiro pelos canais simulados: o botão
 **Simular** injeta uma mensagem pelo mesmo contrato de webhook que o Telegram usa.
 
 Para ligar o Telegram de verdade: crie um bot no `@BotFather`, ponha o token em
-`TELEGRAM_BOT_TOKEN` no `.env`, exponha a porta 3000 e registre o webhook.
+`TELEGRAM_BOT_TOKEN` no `.env`, escolha um valor qualquer para
+`TELEGRAM_WEBHOOK_SECRET`, exponha a porta 3000 e registre o webhook com esse
+mesmo segredo:
+
+```bash
+curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=<url-publica>/webhooks/telegram&secret_token=$TELEGRAM_WEBHOOK_SECRET"
+```
+
+O gateway recusa update que não traga o segredo de volta no header
+`X-Telegram-Bot-Api-Secret-Token`, e sobe com erro se o bot estiver configurado
+sem ele — webhook registrado sem `secret_token` tomaria 401 em todo update.
 
 ## Por que três serviços
 

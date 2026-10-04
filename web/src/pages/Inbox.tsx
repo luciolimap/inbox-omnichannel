@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "../api";
+import { api, authHeader } from "../api";
 import { useAuth, type Agent } from "../auth";
 import { useRealtime } from "../realtime";
 import { ConversationList, type ConversationSummary } from "../components/ConversationList";
@@ -84,11 +84,19 @@ export function Inbox() {
   async function simularMensagem() {
     const texto = window.prompt("Texto da mensagem simulada:", "oi, preciso de ajuda");
     if (texto === null || texto.trim() === "") return;
-    await fetch(`${GATEWAY_URL}/webhooks/whatsapp`, {
+    const resposta = await fetch(`${GATEWAY_URL}/webhooks/whatsapp`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeader() },
       body: JSON.stringify({ from: "+5511999999999", name: "Cliente Simulado", text: texto }),
     });
+    // O webhook passou a exigir credencial, entao ele tem como recusar. Sem isso
+    // o botao falharia calado e a mensagem simplesmente nao apareceria.
+    if (!resposta.ok) {
+      window.alert(resposta.status === 401
+        ? "Sessão expirada: entre de novo para simular."
+        : `O gateway recusou a simulação (${resposta.status}).`);
+      return;
+    }
     await carregarLista();
   }
 

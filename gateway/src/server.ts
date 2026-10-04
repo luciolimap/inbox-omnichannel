@@ -1,15 +1,28 @@
-import Fastify, { type FastifyInstance } from "fastify";
+import { timingSafeEqual } from "node:crypto";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import { env } from "./env.js";
 import { adapterFor, allAdapters } from "./channels/registry.js";
-import { ingest } from "./core-client.js";
+import { agenteAutenticado, CoreIndisponivel, ingest } from "./core-client.js";
 import { addClient, broadcast } from "./realtime.js";
 
 interface DispatchBody {
   channel?: string;
   externalContactId?: string;
   body?: string;
+}
+
+// timingSafeEqual em vez de ===: o curto-circuito do === vaza o prefixo do
+// segredo pelo tempo de resposta. Header repetido chega como array e e recusado:
+// entrega legitima do Telegram manda o header uma vez.
+function segredoCasa(recebido: string | string[] | undefined): boolean {
+  if (!env.telegramWebhookSecret || typeof recebido !== "string") {
+    return false;
+  }
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(env.telegramWebhookSecret);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function buildServer(): FastifyInstance {
@@ -26,7 +39,34 @@ export function buildServer(): FastifyInstance {
     });
   });
 
+  // A credencial muda com o canal porque quem chama muda. O Telegram devolve o
+  // secret_token do setWebhook; o canal simulado e chamado pelo navegador do
+  // agente, onde segredo nao se guarda, entao vale o JWT que ele ja tem.
+  async function credencialAceita(canal: string, request: FastifyRequest): Promise<boolean> {
+    if (canal.toUpperCase() === "TELEGRAM") {
+      return segredoCasa(request.headers["x-telegram-bot-api-secret-token"]);
+    }
+    const authorization = request.headers.authorization;
+    if (!authorization) {
+      return false;
+    }
+    return agenteAutenticado(authorization);
+  }
+
   server.post<{ Params: { channel: string } }>("/webhooks/:channel", async (request, reply) => {
+    // Credencial antes do 404: sem ela o gateway nao conta quais canais existem.
+    try {
+      if (!(await credencialAceita(request.params.channel, request))) {
+        return reply.status(401).send({ error: "credencial_do_webhook_invalida" });
+      }
+    } catch (erro) {
+      if (erro instanceof CoreIndisponivel) {
+        request.log.error({ erro: String(erro) }, "nao deu para validar a sessao");
+        return reply.status(503).send({ error: "core_indisponivel" });
+      }
+      throw erro;
+    }
+
     const adapter = adapterFor(request.params.channel);
     if (!adapter) {
       return reply.status(404).send({ error: "canal_desconhecido" });
