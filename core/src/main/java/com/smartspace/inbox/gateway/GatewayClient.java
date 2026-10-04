@@ -17,7 +17,11 @@ public class GatewayClient {
 
     private static final Logger log = LoggerFactory.getLogger(GatewayClient.class);
 
+    // HTTP/1.1 fixo: no padrao HTTP_2 o cliente tenta upgrade h2c, que o servidor
+    // Node do gateway nao fala, e o POST chega com o corpo descasado do
+    // Content-Length (FST_ERR_CTP_INVALID_CONTENT_LENGTH no Fastify).
     private final HttpClient http = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(3))
             .build();
     private final String gatewayUrl;

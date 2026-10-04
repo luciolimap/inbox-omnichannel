@@ -1,10 +1,8 @@
 import { useAuth } from "./auth";
 import { Login } from "./pages/Login";
+import { Inbox } from "./pages/Inbox";
 
 export function App() {
   const { agent } = useAuth();
-  if (agent === null) {
-    return <Login />;
-  }
-  return <pre className="p-4">sessao aberta como {agent.email}</pre>;
+  return agent === null ? <Login /> : <Inbox />;
 }
