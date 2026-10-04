@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: inbox-core
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:inbox}
+    username: ${DB_USER:inbox}
+    password: ${DB_PASSWORD:inbox_dev}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+
+inbox:
+  jwt:
+    secret: ${JWT_SECRET:segredo-de-desenvolvimento-com-mais-de-32-chars}
+    ttl-minutes: 480
+  internal-token: ${INTERNAL_TOKEN:token-interno-de-desenvolvimento}
+  gateway-url: ${GATEWAY_URL:http://localhost:3000}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.smartspace.inbox: DEBUG

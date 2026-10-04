@@ -15,5 +15,50 @@ services:
       timeout: 3s
       retries: 10
 
+  core:
+    build: ./core
+    environment:
+      DB_HOST: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-inbox_dev}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?defina INTERNAL_TOKEN no .env}
+      GATEWAY_URL: http://gateway:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  gateway:
+    build: ./gateway
+    environment:
+      PORT: 3000
+      CORE_URL: http://core:8080
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?defina INTERNAL_TOKEN no .env}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      core:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: http://localhost:8080
+        VITE_GATEWAY_URL: http://localhost:3000
+        VITE_WS_URL: ws://localhost:3000/ws
+    ports:
+      - "8081:80"
+    depends_on:
+      - core
+      - gateway
+
 volumes:
   pgdata:

@@ -1,6 +1,6 @@
-# Estado em 01/10/2026
+# Estado em 03/10/2026
 
-Vaga fecha em 08/10/2026. Restam 7 dias.
+Vaga fecha em 08/10/2026. Restam 5 dias.
 
 ## Pronto
 
@@ -10,33 +10,85 @@ Vaga fecha em 08/10/2026. Restam 7 dias.
 - Task 2 Steps 1 e 2: `core/` do Spring Initializr, parent fixado em Spring Boot **3.5.16**,
   starters corrigidos, jjwt e Testcontainers acrescentados. `./mvnw -B -q compile` → exit 0.
 - Commit `767ea71` como `Lucio Lima <luciolimap@gmail.com>`.
+- **Task 1 fechada.** Docker Desktop 29.8.1 e Compose v5.5.1 instalados.
+  `docker compose ps --format '{{.Service}} {{.State}} {{.Health}}'` → `postgres running healthy`.
+- **Task 2 fechada.** `application.yml`, `V1__schema.sql`, cinco enums, `Agent`, `Contact`,
+  `Conversation`, `Message`, quatro repositórios, `PostgresIT` e `ConversationRepositoryIT`.
+  `./mvnw -B -q test -Dtest=ConversationRepositoryIT` → exit 0, dois testes.
+  Commit `3348b95` na branch `feat/core-dominio`.
+
+- **Task 3 fechada.** `JwtService`, `JwtAuthFilter`, `SecurityConfig`, `AuthController`,
+  `AgentController`, `ApiExceptionHandler`, `DataInitializer` com os dois agentes semeados.
+  `./mvnw -B test` → `Tests run: 9, Failures: 0`, `BUILD SUCCESS`.
+
+- **Task 4 fechada.** `MessageDto`, `ConversationSummary`, `ConversationDetail`,
+  `ConversationService` e `ConversationController` com `GET /api/conversations` e o detalhe.
+  `./mvnw -B test` → `Tests run: 13, Failures: 0`, `BUILD SUCCESS`.
+
+- **Task 5 fechada.** `InboundRequest`, `InternalTokenFilter`, `InboundController` e
+  `ConversationService.ingest` idempotente por `externalMessageId`.
+  `./mvnw -B test` → `Tests run: 19, Failures: 0`, `BUILD SUCCESS`.
+
+- **Task 6 fechada.** `GatewayClient`, `ReplyRequest`, `AssignRequest`, `StatusRequest`,
+  `ReplyPrepared`, as rotas `POST /{id}/messages`, `PATCH /{id}/assign`, `PATCH /{id}/status`,
+  e `ConversationServiceTest` sem banco. `./mvnw -B test` → `Tests run: 27, Failures: 0`.
+  O core está completo; falta o gateway Node e o front.
+
+- **Task 7 fechada.** `gateway/` em Fastify: `env.ts`, `channels/{types,simulated,registry}.ts`,
+  `core-client.ts`, `realtime.ts`, `server.ts` e `main.ts`.
+  `npm test` → `Tests 8 passed (8)`; `npm run lint` (`tsc --noEmit`) → exit 0.
+
+- **Task 8 fechada no código.** `channels/telegram.ts`, registro condicional ao
+  `TELEGRAM_BOT_TOKEN` e `GET /channels`. `npm test` → `Tests 12 passed (12)`; lint exit 0.
+
+- **Task 9 fechada.** `web/` em Vite + React + TypeScript com Bootstrap 5: `api.ts`, `auth.tsx`,
+  `pages/Login.tsx`, `styles.css`, `App.tsx`, `main.tsx`. `npm run build` → `built in 807ms`.
+  Login provado contra o core de pé, com `Origin: http://localhost:5173`:
+  `HTTP/1.1 200`, `Access-Control-Allow-Origin: http://localhost:5173`, `"role":"AGENT"`.
+
+- **Task 10 fechada.** `realtime.ts`, `pages/Inbox.tsx` e os cinco componentes
+  (`ConversationList`, `MessageThread`, `Composer`, `ChannelBadge`, `StatusBadge`).
+  `npm run lint` → exit 0; `npm run build` → `built in 929ms`. Commit `45b8aee`.
+  No mesmo commit, o `GatewayClient` passou a fixar `HTTP/1.1`: no padrão `HTTP_2` o
+  cliente tenta upgrade h2c, que o Fastify não fala, e o POST chegava com o corpo
+  descasado do `Content-Length` (`FST_ERR_CTP_INVALID_CONTENT_LENGTH`).
+
+- **Task 11 fechada.** `core/Dockerfile`, `gateway/Dockerfile`, `web/Dockerfile`,
+  `web/nginx.conf`, `docker-compose.yml` com os quatro serviços e `.github/workflows/ci.yml`.
+  `docker compose up -d --build` → `postgres core gateway web` todos `running`.
+  Volta completa provada pelos containers: webhook simulado, conversa criada,
+  resposta com `deliveryStatus: SENT`, mensagem no `/simulated/outbox` do gateway.
+  Commit `3768b3d`.
+
+- **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
+  1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
+  emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
+  persistem depois de `docker compose restart core`; `./mvnw -B test` →
+  `Tests run: 27, Failures: 0`; `npm test` do gateway → `Tests 12 passed (12)`.
 
 ## Pendente para retomar
 
-1. **Docker Desktop 4.93.0 não terminou de instalar.** O WSL2 já está instalado.
-   Retomar com:
+1. **Task 8 Step 7, prova ponta a ponta do Telegram: depende do Lucio.** Criar o bot no
+   `@BotFather`, pôr o token em `.env` como `TELEGRAM_BOT_TOKEN`, expor a porta 3000
+   (`npx --yes localtunnel --port 3000`) e registrar o webhook:
+   `curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=<url-do-tunel>/webhooks/telegram"`.
+   Esperado: `{"ok":true,"result":true,"description":"Webhook was set"}`. Isso fecha o
+   critério de aceite 4, que pede GIF com o celular visível no `README.md`.
 
-   ```powershell
-   winget install -e --id Docker.DockerDesktop --accept-source-agreements --accept-package-agreements
-   ```
+2. **`docs/inbox.gif` e `docs/mobile.png` não existem: dependem do Lucio.** O
+   `README.md` já referencia os dois, então as duas imagens aparecem quebradas até a
+   gravação. O GIF fecha o critério 4 (Telegram ponta a ponta, celular visível) e
+   depende do mesmo bot do item 1. O PNG fecha o critério 7: abrir
+   <http://localhost:8081> no DevTools a 375px e conferir que não há scroll
+   horizontal e que a lista sai de cena com conversa aberta.
 
-   Depois reiniciar a máquina, abrir o Docker Desktop uma vez, aceitar os termos, e conferir:
+3. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
+   (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
+   O remoto é GitHub, não GitLab: `gh` já está autenticado, então `gh repo create` resolve
+   sem instalar nada. O processo passa a ser Pull Request em vez de Merge Request.
 
-   ```bash
-   docker compose version
-   docker compose up -d postgres
-   docker compose ps --format '{{.Service}} {{.State}} {{.Health}}'
-   ```
-
-   Esperado: `postgres running healthy`. Isso fecha a Task 1.
-
-2. **Repositório remoto ainda não existe.** `glab` não está instalado. Decidir entre
-   `winget install glab.glab` ou criar o projeto no GitLab pela web e só adicionar o remote.
-   `gh` já está autenticado como `luciolimap` para o espelho no GitHub.
-
-3. **Task 2 Steps 3 a 12**: apagar o `application.properties` do Initializr, escrever o
-   `application.yml`, a migração `V1__schema.sql`, enums, entidades, repositórios e o teste
-   com Testcontainers. Precisa do Docker de pé.
+3. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
+   de engenharia, mas no formato de plano de agente.
 
 ## Decisões tomadas que não se refazem
 
@@ -44,3 +96,19 @@ Vaga fecha em 08/10/2026. Restam 7 dias.
 - Front-end em Bootstrap 5 e CSS próprio. Nada de Tailwind ou biblioteca de componentes.
 - Telegram é canal real; WhatsApp e e-mail entram pelo mesmo contrato de webhook, simulados.
 - Execução das tarefas em subagente com `model: "sonnet"`; spec, plano, revisão e commit em Opus.
+- Teste de integração é `@Transactional`. O container do PostgreSQL é único para a suíte, então
+  sem rollback por teste o dado de um teste entra na asserção de ordem do outro. O plano original
+  não previa isso e o `ConversationRepositoryIT` falhou com `[1L, 3L, 2L]` antes da correção.
+- O `lint` do `web` é `tsc -b --noEmit`, não `tsc --noEmit`. O template do Vite põe as opções
+  reais em `tsconfig.app.json`, e sem `-b` o lint passava verde em código que o `build` reprovava
+  com `error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled`.
+- O ponto de entrada do gateway é `gateway/src/main.ts`, não um guard de `import.meta.url` no fim
+  do `server.ts`. O guard compara caminhos e erra no Windows por causa da barra invertida; com
+  arquivo separado o teste importa `buildServer` sem abrir porta.
+- Em `persistReply`, a mensagem é persistida por `messages.saveAndFlush`, não pelo cascade de
+  `conversations.save`. `save` numa conversa que já tem id chama `em.merge`, que copia a mensagem
+  nova: o id nasce na cópia gerenciada e a instância local fica com `id` nulo, o que quebrava o
+  `markDelivery` com `InvalidDataAccessApiUsageException: The given id must not be null`.
+- O surefire tem `<includes>` com `**/*IT.java`. O critério de aceite 6 roda `./mvnw test`, e o
+  padrão do surefire só pega `*Test`: sem o include, os testes que sobem o PostgreSQL ficavam
+  de fora e `./mvnw test` passava com um teste só.
