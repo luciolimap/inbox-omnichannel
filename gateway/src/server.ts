@@ -5,7 +5,7 @@ import websocket from "@fastify/websocket";
 import { env } from "./env.js";
 import { adapterFor, allAdapters } from "./channels/registry.js";
 import { agenteAutenticado, CoreIndisponivel, ingest } from "./core-client.js";
-import { addClient, broadcast } from "./realtime.js";
+import { autenticar, broadcast } from "./realtime.js";
 
 interface DispatchBody {
   channel?: string;
@@ -29,13 +29,15 @@ export function buildServer(): FastifyInstance {
   const server = Fastify({ logger: true });
 
   server.register(cors, { origin: true });
-  server.register(websocket);
+  // maxPayload default do ws e 100 MiB, e o frame e lido antes de qualquer
+  // prova de credencial. O token cabe folgado em 4 KiB.
+  server.register(websocket, { options: { maxPayload: 4096 } });
 
   server.get("/health", async () => ({ status: "ok" }));
 
   server.register(async (instance) => {
     instance.get("/ws", { websocket: true }, (socket) => {
-      addClient(socket);
+      autenticar(socket, instance.log);
     });
   });
 

@@ -12,6 +12,12 @@ export function authHeader(): Record<string, string> {
   return token === null ? {} : { Authorization: `Bearer ${token}` };
 }
 
+// O chamador do WebSocket precisa do valor cru, e precisa distinguir deslogado
+// de logado: sem token nao vale abrir conexao.
+export function tokenAtual(): string | null {
+  return token;
+}
+
 export class ApiError extends Error {
   // Campo declarado e atribuido no corpo, nao parameter property: o tsconfig do
   // template liga erasableSyntaxOnly, que recusa a forma curta.
