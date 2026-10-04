@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { tokenAtual } from "./api";
+import { expirarSessao, tokenAtual } from "./api";
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:3000/ws";
 
@@ -31,7 +31,11 @@ export function useRealtime(onEvent: () => void): void {
       // 4401 e credencial recusada e nao melhora com tentativa: insistir seria
       // uma validacao de JWT no core a cada 3s, por aba, para sempre.
       socket.onclose = (evento) => {
-        if (ativo && evento.code !== CODIGO_CREDENCIAL_RECUSADA) {
+        if (evento.code === CODIGO_CREDENCIAL_RECUSADA) {
+          expirarSessao();
+          return;
+        }
+        if (ativo) {
           timer = window.setTimeout(conectar, 3000);
         }
       };

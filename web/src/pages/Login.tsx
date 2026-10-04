@@ -3,7 +3,7 @@ import { useAuth } from "../auth";
 import { ApiError } from "../api";
 
 export function Login() {
-  const { login, loading } = useAuth();
+  const { login, loading, expirada } = useAuth();
   const [email, setEmail] = useState("agente@smartspace.test");
   const [password, setPassword] = useState("senha123");
   const [erro, setErro] = useState<string | null>(null);
@@ -36,6 +36,9 @@ export function Login() {
                  value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
 
+        {expirada && (
+          <div className="alert alert-warning py-2 small">Sua sessão expirou. Entre de novo.</div>
+        )}
         {erro !== null && <div className="alert alert-danger py-2 small">{erro}</div>}
 
         <button className="btn btn-primary w-100" type="submit" disabled={loading}>

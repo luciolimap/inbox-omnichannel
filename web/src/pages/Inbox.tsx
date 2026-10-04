@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, authHeader } from "../api";
-import { useAuth, type Agent } from "../auth";
+import { useAuth } from "../auth";
+import type { Agent } from "../session";
 import { useRealtime } from "../realtime";
 import { ConversationList, type ConversationSummary } from "../components/ConversationList";
 import { MessageThread, type MessageDto } from "../components/MessageThread";
@@ -41,7 +42,9 @@ export function Inbox() {
   }, [carregarLista]);
 
   useEffect(() => {
-    void api.get<Agent[]>("/api/agents").then(setAgents);
+    // O catch nao e decorativo: com 401 o provider ja derruba a sessao, e sem
+    // ele a promise rejeitada vira unhandled rejection no console.
+    void api.get<Agent[]>("/api/agents").then(setAgents).catch(() => setAgents([]));
   }, []);
 
   useEffect(() => {

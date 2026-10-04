@@ -37,6 +37,8 @@ jobs:
         working-directory: web
       - run: npm run lint
         working-directory: web
+      - run: npm test
+        working-directory: web
 
   test-core:
     runs-on: ubuntu-latest
