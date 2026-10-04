@@ -1,6 +1,29 @@
-# Estado em 04/10/2026
+# Estado em 04/10/2026 (fim da sessão)
 
-Vaga fecha em 08/10/2026. Restam 4 dias.
+Vaga fecha em 08/10/2026. Restam 4 dias, e o dia 08 é margem: a entrega é um link
+que alguém abre, então o trabalho real cabe em 05, 06 e 07.
+
+## Retomar aqui
+
+**Decidido em 04/10: o filtro por status fica como está, não mexer agora.** Ele está
+entregue e funciona; só não casa com o "Fora de escopo" da spec. Resolver isso não
+move nenhum critério de aceite, e os três que faltam movem.
+
+Ordem combinada para os próximos dias:
+
+1. **05/10 — caminho crítico, depende do Lucio.** Gravar `docs/inbox.gif` (Telegram
+   ponta a ponta, celular visível, critério 4) e `docs/mobile.png` (375px sem scroll
+   horizontal, critério 7). O `README.md` já referencia os dois arquivos, então hoje a
+   capa do projeto abre com dois links quebrados — é a primeira coisa que o avaliador vê.
+   O `setWebhook` agora precisa de `secret_token`; o comando completo está no item 1 de
+   "Pendente para retomar".
+2. **06/10 — uma tarefa, um Pull Request.** É o único jeito de mexer no critério 9, que
+   pede cinco PRs e tem um. Candidatos, nesta ordem: N+1 do `ConversationService.list`
+   com a recarga por evento, depois os quatro warnings do `oxlint`.
+3. **07/10 — polimento de entrega.** Reler o `README` inteiro como avaliador, tornar o
+   repositório público (o badge do CI só renderiza para quem tem acesso), conferir o
+   badge verde, e rodar `docker compose up -d` num clone limpo para provar que sobe do
+   zero.
 
 ## Pronto
 
