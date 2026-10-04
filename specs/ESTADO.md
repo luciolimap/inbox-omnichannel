@@ -116,6 +116,24 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
   checava antes de a microtask do `fetch` rodar. Teste com timer falso e `await`
   pendente precisa drenar microtask, senão assere o estado anterior.
 
+- **Sessão expirada termina em login, commit `c054bab`.** Spec em
+  `specs/2026-10-04-sessao-expirada-no-front.md`. O `401` é detectado em `request()`,
+  o único ponto por onde toda chamada ao core passa, e avisa o `AuthProvider`, que
+  apaga a sessão e mostra o aviso no login. O `401` de `/api/auth/login` continua sendo
+  senha errada, e o `401` atrasado de um token velho não derruba a sessão nova: cada
+  chamada guarda a geração do token com que saiu. A leitura do `localStorage` saiu para
+  `web/src/session.ts` com o `try` em volta do acesso inteiro, não só do parse — em aba
+  privativa o próprio `getItem` lança, e isso rodava no inicializador do `useState`.
+  O `web` ganhou `vitest` (não tinha suíte) e o `npm test` entrou no job `lint-web`:
+  job separado repetia o mesmo `npm ci` por um comando de diferença.
+
+  Três achados vieram da revisão de fecho, e um era desta própria mudança: o
+  `JSON.parse` corria **antes** da checagem do `401`, então corpo de proxy em HTML
+  estourava `SyntaxError` e a sessão ficava de pé, que é o bug que a mudança existia
+  para matar. Os outros dois: o token era semeado pelo efeito do provider, mas no F5 os
+  efeitos do `Inbox` correm antes dos do pai e as chamadas saíam sem `Authorization`;
+  e o `/ws` fechando com `4401` não avisava ninguém, então o inbox congelava calado.
+
 - **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
   1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
   emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
@@ -147,16 +165,17 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 4. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
 
-5. **Achados da revisão que seguem abertos, cada um uma decisão sua.** `web/src/api.ts`
-   não trata `401`, então sessão vencida mostra inbox vazio em vez de voltar ao login —
-   o `/ws` já distingue isso pelo código `4401`, o resto do front não.
-   `DataInitializer` semeia `agente@` e `admin@` com `senha123` sem guarda de profile.
-   O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue mas a spec
-   lista filtros em "Fora de escopo". `ConversationService.list` carrega todas as
-   conversas e, por lazy, todas as mensagens de cada uma só para a prévia (N+1).
-   Sem rate limit no gateway, N sockets ou N webhooks ainda provocam N validações de
-   JWT no core; está no "Fora de escopo" da spec do `/ws`.
-   Quatro warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`, nenhum quebra.
+5. **Achados da revisão que seguem abertos, cada um uma decisão sua.**
+   `DataInitializer` semeia `agente@` e `admin@` com `senha123` sem guarda de profile,
+   e o `README` publica a credencial: qualquer instância exposta nasce com um ADMIN
+   conhecido. O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue
+   mas a spec lista filtros em "Fora de escopo" — decidir se fica ou se a spec muda.
+   `ConversationService.list` carrega todas as conversas e, por lazy, todas as mensagens
+   de cada uma só para montar a prévia (N+1), e o front recarrega a lista inteira a cada
+   evento WebSocket, por cliente aberto. Sem rate limit no gateway, N sockets ou N
+   webhooks ainda provocam N validações de JWT no core; está no "Fora de escopo" da spec
+   do `/ws`. Quatro warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`,
+   nenhum quebra o build.
 
 6. **Avisos do Actions, nenhum quebra o build.** `actions/setup-java` já está em `@v5`.
    Restam `actions/checkout@v4` e `actions/setup-node@v4`, que ainda miram Node 20 e o
@@ -171,7 +190,7 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 | 3 | Webhook cria conversa | verde |
 | 4 | Telegram ponta a ponta, GIF com celular | **falta**, itens 1 e 2 |
 | 5 | Atribuição e resolução persistem | verde |
-| 6 | Teste do core e do gateway | verde, `Tests run: 29` e `Tests 28 passed` |
+| 6 | Teste do core e do gateway | verde, `Tests run: 29`, `Tests 28 passed`, e `Tests 7 passed` no web |
 | 7 | Responsivo a 375px, screenshot | **falta**, item 2 |
 | 8 | Pipeline verde com link no `README.md` | verde, badge em `main` |
 | 9 | Cinco Pull Requests fechados | **não fecha**, item 3 |
