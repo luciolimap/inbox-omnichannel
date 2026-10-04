@@ -12,9 +12,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// O container e unico para a suite. Sem rollback por teste, a conversa de um
-// teste entra na ordenacao do outro e a assercao de ordem passa a depender da
-// ordem de execucao.
+// O container e unico para a suite e o InboundApiIT commita conversa, entao
+// findAll ve dado de outra classe. O @Transactional evita sujar quem vem
+// depois; a ordem relativa e o que esta sob teste, nao o tamanho da lista.
 @Transactional
 class ConversationRepositoryIT extends PostgresIT {
 
@@ -32,7 +32,7 @@ class ConversationRepositoryIT extends PostgresIT {
         List<Conversation> resultado = conversations.findAllByOrderByLastMessageAtDesc();
 
         assertThat(resultado).extracting(Conversation::getId)
-                .containsExactly(recente.getId(), antiga.getId());
+                .containsSubsequence(recente.getId(), antiga.getId());
     }
 
     @Test
