@@ -1,5 +1,7 @@
 # Inbox Omnichannel
 
+[![ci](https://github.com/luciolimap/inbox-omnichannel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/luciolimap/inbox-omnichannel/actions/workflows/ci.yml?query=branch%3Amain)
+
 Caixa de entrada única para mensagens de Telegram, WhatsApp e e-mail: a mensagem
 chega pelo canal, o agente responde na web, e a resposta sai pelo mesmo canal.
 
@@ -55,6 +57,16 @@ cd gateway && npm test      # contrato de canal e rotas
 ## Interface no celular
 
 ![Inbox em viewport de 375px](docs/mobile.png)
+
+## Pipeline
+
+Cinco jobs no GitHub Actions a cada push: `tsc --noEmit` no gateway, `tsc -b --noEmit`
+no web, `./mvnw -B test` no core com Testcontainers, `npm test` no gateway e
+`docker build` das três imagens. O `build-images` só roda se os quatro anteriores
+passarem.
+
+Último verde em `main`:
+<https://github.com/luciolimap/inbox-omnichannel/actions/runs/37173744935>
 
 ## Stack
 

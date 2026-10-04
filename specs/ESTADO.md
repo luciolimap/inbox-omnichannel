@@ -1,6 +1,6 @@
-# Estado em 03/10/2026
+# Estado em 04/10/2026
 
-Vaga fecha em 08/10/2026. Restam 5 dias.
+Vaga fecha em 08/10/2026. Restam 4 dias.
 
 ## Pronto
 
@@ -60,6 +60,13 @@ Vaga fecha em 08/10/2026. Restam 5 dias.
   resposta com `deliveryStatus: SENT`, mensagem no `/simulated/outbox` do gateway.
   Commit `3768b3d`.
 
+- **CI migrado para GitHub Actions.** `.gitlab-ci.yml` apagado, `.github/workflows/ci.yml`
+  com os mesmos cinco jobs. O runner `ubuntu-latest` já tem Docker, então o serviço
+  `docker:dind` e as variáveis `DOCKER_HOST` e `TESTCONTAINERS_HOST_OVERRIDE` saíram.
+  Repositório privado em <https://github.com/luciolimap/inbox-omnichannel>, PR #1
+  mergeado em `main` com `--merge` (não squash: o critério 9 quer os Conventional
+  Commits visíveis). Run verde em `main`: `37173744935`, cinco jobs.
+
 - **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
   1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
   emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
@@ -82,10 +89,9 @@ Vaga fecha em 08/10/2026. Restam 5 dias.
    <http://localhost:8081> no DevTools a 375px e conferir que não há scroll
    horizontal e que a lista sai de cena com conversa aberta.
 
-3. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
-   (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
-   O remoto é GitHub, não GitLab: `gh` já está autenticado, então `gh repo create` resolve
-   sem instalar nada. O processo passa a ser Pull Request em vez de Merge Request.
+3. **Critério de aceite 9 não fecha.** Ele pede pelo menos cinco Pull Requests fechados,
+   e os treze commits entraram num PR só (#1). Não tem conserto retroativo: tarefa nova
+   fecha por PR separado.
 
 3. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
@@ -109,6 +115,15 @@ Vaga fecha em 08/10/2026. Restam 5 dias.
   `conversations.save`. `save` numa conversa que já tem id chama `em.merge`, que copia a mensagem
   nova: o id nasce na cópia gerenciada e a instância local fica com `id` nulo, o que quebrava o
   `markDelivery` com `InvalidDataAccessApiUsageException: The given id must not be null`.
+- O runner limpo reprovou dois testes que passavam aqui, e os dois dependiam da máquina.
+  `CoreApplicationTests` era o esqueleto do Initializr: `@SpringBootTest` sem
+  Testcontainers, abria o datasource do `application.yml` e só passava porque o
+  `docker compose` local expõe 5432 (`Connection to localhost:5432 refused` no CI).
+  Apagado: os cinco ITs que estendem `PostgresIT` já provam que o contexto sobe.
+  `ConversationRepositoryIT` assertava `containsExactly` sobre `findAll`, o que exige
+  banco vazio; o `InboundApiIT` tem `@Transactional` em um método só e commita conversa
+  nos outros. Agora é `containsSubsequence`, que prova a ordem relativa. A falha reproduz
+  com `./mvnw -B test -Dsurefire.runOrder=reversealphabetical`.
 - O surefire tem `<includes>` com `**/*IT.java`. O critério de aceite 6 roda `./mvnw test`, e o
   padrão do surefire só pega `*Test`: sem o include, os testes que sobem o PostgreSQL ficavam
   de fora e `./mvnw test` passava com um teste só.
