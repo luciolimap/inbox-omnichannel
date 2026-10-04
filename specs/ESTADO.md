@@ -65,7 +65,11 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
   `docker:dind` e as variáveis `DOCKER_HOST` e `TESTCONTAINERS_HOST_OVERRIDE` saíram.
   Repositório privado em <https://github.com/luciolimap/inbox-omnichannel>, PR #1
   mergeado em `main` com `--merge` (não squash: o critério 9 quer os Conventional
-  Commits visíveis). Run verde em `main`: `37173744935`, cinco jobs.
+  Commits visíveis). `main` em `efe7268`, pipeline verde nos cinco jobs.
+  **Critério de aceite 8 fechado:** badge do workflow no topo do `README.md`,
+  apontando para a query de `main`. A URL de um run específico entrou e saiu no
+  mesmo dia — ela congela e mente no commit seguinte; o badge acompanha `main`.
+  O badge só renderiza para quem tem acesso: o repo é privado até a candidatura.
 
 - **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
   1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
@@ -93,8 +97,27 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
    e os treze commits entraram num PR só (#1). Não tem conserto retroativo: tarefa nova
    fecha por PR separado.
 
-3. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
+4. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
+
+5. **Avisos do Actions, nenhum quebra o build.** `setup-java v4 is deprecated and will no
+   longer receive updates` pede `actions/setup-java@v5`; `actions/checkout@v4` e
+   `actions/setup-node@v4` ainda miram Node 20 e o runner força Node 24. O
+   `ubuntu-latest` migra para Ubuntu 26 em 19/10/2026. Nada tocado: aviso não é falha.
+
+## Onde cada critério de aceite está
+
+| # | O que pede | Estado |
+|---|---|---|
+| 1 | Sobe em um comando | verde, quatro serviços `running` |
+| 2 | Autenticação rejeita e aceita | verde |
+| 3 | Webhook cria conversa | verde |
+| 4 | Telegram ponta a ponta, GIF com celular | **falta**, itens 1 e 2 |
+| 5 | Atribuição e resolução persistem | verde |
+| 6 | Teste do core e do gateway | verde, `Tests run: 27` e `Tests 12 passed` |
+| 7 | Responsivo a 375px, screenshot | **falta**, item 2 |
+| 8 | Pipeline verde com link no `README.md` | verde, badge em `main` |
+| 9 | Cinco Pull Requests fechados | **não fecha**, item 3 |
 
 ## Decisões tomadas que não se refazem
 
