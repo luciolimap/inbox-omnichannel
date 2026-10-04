@@ -96,6 +96,26 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
   quais canais existem. `env.ts` recusa o boot com `TELEGRAM_BOT_TOKEN` sem
   `TELEGRAM_WEBHOOK_SECRET`. `npm test` do gateway → `Tests 19 passed (19)`.
 
+- **Credencial no `/ws` antes da difusão, commit `43416f1`.** Spec em
+  `specs/2026-10-04-auth-no-websocket.md`. A prova é a primeira mensagem,
+  `{"token":"<jwt>"}`: o handshake de WebSocket do navegador não leva header
+  customizado, e `?token=` cairia no log de requisição do gateway. Até o token válido
+  chegar o socket fica fora da lista de difusão, e silêncio por 5s fecha a conexão.
+  O fechamento carrega o motivo porque o cliente reconecta a cada 3s: `4401` é
+  credencial recusada e ele não insiste, `4503` é core fora do ar e ele tenta de novo.
+  Sem isso, sessão velha no `localStorage` virava uma validação de JWT no core a cada
+  3s, por aba, para sempre. `maxPayload` do WebSocket caiu para 4 KiB: o default do
+  `ws` é 100 MiB e o frame é lido antes de qualquer prova. `npm test` do gateway →
+  `Tests 28 passed (28)`.
+
+  Duas corridas vieram da revisão de fecho, as duas no handler `async` de `message`:
+  validação que voltava depois do prazo chamava `clientes.add` em cima de socket já
+  fechado, e cada frame abria uma validação no core. As guardas `validando` e
+  `encerrado` fecham as duas. **O teste da primeira passou verde por acidente** até
+  trocar `vi.waitFor` por `vi.advanceTimersByTimeAsync`: com timers falsos o `waitFor`
+  checava antes de a microtask do `fetch` rodar. Teste com timer falso e `await`
+  pendente precisa drenar microtask, senão assere o estado anterior.
+
 - **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
   1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
   emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
@@ -127,14 +147,15 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 4. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
 
-5. **Achados da revisão que seguem abertos, cada um uma decisão sua.** `GET /ws` não tem
-   autenticação e transmite todo inbound e outbound a qualquer conexão (a spec da auth do
-   webhook pôs isso em "Fora de escopo": exige passar o JWT na handshake). `web/src/api.ts`
-   não trata `401`, então sessão vencida mostra inbox vazio em vez de voltar ao login.
+5. **Achados da revisão que seguem abertos, cada um uma decisão sua.** `web/src/api.ts`
+   não trata `401`, então sessão vencida mostra inbox vazio em vez de voltar ao login —
+   o `/ws` já distingue isso pelo código `4401`, o resto do front não.
    `DataInitializer` semeia `agente@` e `admin@` com `senha123` sem guarda de profile.
    O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue mas a spec
    lista filtros em "Fora de escopo". `ConversationService.list` carrega todas as
    conversas e, por lazy, todas as mensagens de cada uma só para a prévia (N+1).
+   Sem rate limit no gateway, N sockets ou N webhooks ainda provocam N validações de
+   JWT no core; está no "Fora de escopo" da spec do `/ws`.
    Quatro warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`, nenhum quebra.
 
 6. **Avisos do Actions, nenhum quebra o build.** `actions/setup-java` já está em `@v5`.
@@ -150,7 +171,7 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 | 3 | Webhook cria conversa | verde |
 | 4 | Telegram ponta a ponta, GIF com celular | **falta**, itens 1 e 2 |
 | 5 | Atribuição e resolução persistem | verde |
-| 6 | Teste do core e do gateway | verde, `Tests run: 29` e `Tests 19 passed` |
+| 6 | Teste do core e do gateway | verde, `Tests run: 29` e `Tests 28 passed` |
 | 7 | Responsivo a 375px, screenshot | **falta**, item 2 |
 | 8 | Pipeline verde com link no `README.md` | verde, badge em `main` |
 | 9 | Cinco Pull Requests fechados | **não fecha**, item 3 |
