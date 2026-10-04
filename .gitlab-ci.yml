@@ -1,0 +1,67 @@
+stages: [lint, test, build]
+
+default:
+  interruptible: true
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+lint:gateway:
+  stage: lint
+  image: node:24-alpine
+  cache:
+    key: gateway-$CI_COMMIT_REF_SLUG
+    paths: [gateway/node_modules]
+  script:
+    - cd gateway
+    - npm ci
+    - npm run lint
+
+lint:web:
+  stage: lint
+  image: node:24-alpine
+  cache:
+    key: web-$CI_COMMIT_REF_SLUG
+    paths: [web/node_modules]
+  script:
+    - cd web
+    - npm ci
+    - npm run lint
+
+test:core:
+  stage: test
+  image: maven:3.9-eclipse-temurin-21
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    # Testcontainers precisa de um Docker alcancavel; o dind acima e ele. Sem
+    # isso o teste de repositorio nao roda e a prova de Postgres real cai.
+    TESTCONTAINERS_HOST_OVERRIDE: docker
+  script:
+    - cd core
+    - ./mvnw -B test
+
+test:gateway:
+  stage: test
+  image: node:24-alpine
+  script:
+    - cd gateway
+    - npm ci
+    - npm test
+
+build:images:
+  stage: build
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker build -t inbox-core ./core
+    - docker build -t inbox-gateway ./gateway
+    - docker build -t inbox-web ./web
