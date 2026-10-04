@@ -71,6 +71,31 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
   mesmo dia — ela congela e mente no commit seguinte; o badge acompanha `main`.
   O badge só renderiza para quem tem acesso: o repo é privado até a candidatura.
 
+- **Revisão de fecho rodada sobre `0467085..759bc11`.** Três lentes: `revisao-dois-eixos`
+  (Standards e Spec) e o `/code-review` nativo em `high`. A lente de precisão
+  (`open-code-review-delegate`) foi pulada: `ocr` não está instalado nesta máquina.
+  Três achados corrigidos no commit `b55ffbf`: o escape de JSON escrito à mão em
+  `GatewayClient` (`.replace("
+", "
+")` é no-op em Java, então resposta com Enter
+  virava `FAILED`) trocado por Jackson; `ConversationService.ingest` devolvendo
+  `id: null` em conversa que já existe, pela mesma armadilha do `em.merge` que o
+  `persistReply` já contornava; e o `oxlint`, que estava em devDependencies com
+  `.oxlintrc.json` no repo e nunca executava — o job chamado `lint` só fazia typecheck.
+  Dois achados recusados com motivo: a prévia fora de ordem (a associação tem
+  `@OrderBy("createdAt asc")`) e o `randomUUID` do canal simulado (o Telegram usa
+  `update_id` real, e cada POST simulado é mensagem nova, não reentrega).
+
+- **Credencial no webhook de canal, commit `6cf97dc`.** Spec em
+  `specs/2026-10-04-auth-no-webhook.md`. `POST /webhooks/:channel` exigia nada; agora a
+  credencial muda com o canal, porque quem chama muda. Telegram: `secret_token` do
+  `setWebhook` conferido com `timingSafeEqual`. Simulados: o JWT do agente, validado
+  no core por `GET /api/agents`, porque o botão **Simular** roda no navegador e segredo
+  em front não é segredo. Core fora do ar devolve `503`, não `401`: 4xx ensina o canal
+  a desistir em vez de reentregar. Credencial antes do `404`, senão o gateway conta
+  quais canais existem. `env.ts` recusa o boot com `TELEGRAM_BOT_TOKEN` sem
+  `TELEGRAM_WEBHOOK_SECRET`. `npm test` do gateway → `Tests 19 passed (19)`.
+
 - **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
   1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
   emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
@@ -80,11 +105,13 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 ## Pendente para retomar
 
 1. **Task 8 Step 7, prova ponta a ponta do Telegram: depende do Lucio.** Criar o bot no
-   `@BotFather`, pôr o token em `.env` como `TELEGRAM_BOT_TOKEN`, expor a porta 3000
-   (`npx --yes localtunnel --port 3000`) e registrar o webhook:
-   `curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=<url-do-tunel>/webhooks/telegram"`.
-   Esperado: `{"ok":true,"result":true,"description":"Webhook was set"}`. Isso fecha o
-   critério de aceite 4, que pede GIF com o celular visível no `README.md`.
+   `@BotFather`, pôr o token em `.env` como `TELEGRAM_BOT_TOKEN` **e escolher um valor
+   para `TELEGRAM_WEBHOOK_SECRET`** (sem ele o gateway não sobe), expor a porta 3000
+   (`npx --yes localtunnel --port 3000`) e registrar o webhook **com o segredo**:
+   `curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=<url-do-tunel>/webhooks/telegram&secret_token=$TELEGRAM_WEBHOOK_SECRET"`.
+   Esperado: `{"ok":true,"result":true,"description":"Webhook was set"}`. Registrar sem
+   `secret_token` faz todo update levar `401` e o Telegram reentregar em laço. Isso fecha
+   o critério de aceite 4, que pede GIF com o celular visível no `README.md`.
 
 2. **`docs/inbox.gif` e `docs/mobile.png` não existem: dependem do Lucio.** O
    `README.md` já referencia os dois, então as duas imagens aparecem quebradas até a
@@ -100,7 +127,17 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 4. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
 
-5. **Avisos do Actions, nenhum quebra o build.** `actions/setup-java` já está em `@v5`.
+5. **Achados da revisão que seguem abertos, cada um uma decisão sua.** `GET /ws` não tem
+   autenticação e transmite todo inbound e outbound a qualquer conexão (a spec da auth do
+   webhook pôs isso em "Fora de escopo": exige passar o JWT na handshake). `web/src/api.ts`
+   não trata `401`, então sessão vencida mostra inbox vazio em vez de voltar ao login.
+   `DataInitializer` semeia `agente@` e `admin@` com `senha123` sem guarda de profile.
+   O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue mas a spec
+   lista filtros em "Fora de escopo". `ConversationService.list` carrega todas as
+   conversas e, por lazy, todas as mensagens de cada uma só para a prévia (N+1).
+   Quatro warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`, nenhum quebra.
+
+6. **Avisos do Actions, nenhum quebra o build.** `actions/setup-java` já está em `@v5`.
    Restam `actions/checkout@v4` e `actions/setup-node@v4`, que ainda miram Node 20 e o
    runner força Node 24, e a migração do `ubuntu-latest` para Ubuntu 26 em 19/10/2026.
 
@@ -113,7 +150,7 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 | 3 | Webhook cria conversa | verde |
 | 4 | Telegram ponta a ponta, GIF com celular | **falta**, itens 1 e 2 |
 | 5 | Atribuição e resolução persistem | verde |
-| 6 | Teste do core e do gateway | verde, `Tests run: 27` e `Tests 12 passed` |
+| 6 | Teste do core e do gateway | verde, `Tests run: 29` e `Tests 19 passed` |
 | 7 | Responsivo a 375px, screenshot | **falta**, item 2 |
 | 8 | Pipeline verde com link no `README.md` | verde, badge em `main` |
 | 9 | Cinco Pull Requests fechados | **não fecha**, item 3 |
