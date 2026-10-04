@@ -59,4 +59,4 @@ cd gateway && npm test      # contrato de canal e rotas
 ## Stack
 
 Java 21 · Spring Boot 3.5.16 · Spring Security · JPA · Flyway · PostgreSQL 16 ·
-Node 24 · TypeScript · Fastify 5 · React 19 · Bootstrap 5 · Docker Compose · GitLab CI
+Node 24 · TypeScript · Fastify 5 · React 19 · Bootstrap 5 · Docker Compose · GitHub Actions

@@ -6,7 +6,7 @@
 
 **Architecture:** Três serviços. `gateway` (Node + Fastify) é a borda: recebe webhook de canal, traduz o payload cru para um contrato interno único, repassa ao core e mantém as conexões WebSocket do navegador. `core` (Java + Spring Boot) é o domínio: autenticação, contatos, conversas, mensagens, PostgreSQL via JPA e Flyway. `web` (React + Bootstrap 5) consome a API REST do core e escuta o WebSocket do gateway. A fronteira existe porque webhook de canal precisa aceitar rajada e responder 200 em milissegundos, enquanto o domínio precisa transação — não existe para exibir duas linguagens.
 
-**Tech Stack:** Java 21 / Spring Boot 3.5.16 / Spring Security / JPA / Flyway / jjwt 0.12 / Testcontainers · Node 24 / TypeScript / Fastify 5 / @fastify/websocket / Vitest · React 19 / TypeScript / Vite / Bootstrap 5 · PostgreSQL 16 · Docker Compose · GitLab CI
+**Tech Stack:** Java 21 / Spring Boot 3.5.16 / Spring Security / JPA / Flyway / jjwt 0.12 / Testcontainers · Node 24 / TypeScript / Fastify 5 / @fastify/websocket / Vitest · React 19 / TypeScript / Vite / Bootstrap 5 · PostgreSQL 16 · Docker Compose · GitHub Actions
 
 **Spec:** `specs/2026-10-01-inbox-omnichannel.md`
 
@@ -25,7 +25,7 @@ em Opus; cada tarefa é despachada a um subagente com `model: "sonnet"`.
 - Canais: `TELEGRAM`, `WHATSAPP`, `EMAIL`. Só Telegram fala com serviço externo real; os outros dois entram pelo mesmo contrato de webhook.
 - Chamada entre `core` e `gateway` sempre carrega o header `X-Internal-Token`, valor da env `INTERNAL_TOKEN`. É fronteira de confiança: sem o header, 401.
 - `external_id` de mensagem é sempre prefixado pelo canal (`telegram:4812`, `whatsapp:9f3a`). O prefixo é o que torna o índice único global seguro entre canais.
-- Commits em Conventional Commits (`feat:`, `fix:`, `test:`, `chore:`, `docs:`, `ci:`). Mínimo cinco Merge Requests fechados no GitLab.
+- Commits em Conventional Commits (`feat:`, `fix:`, `test:`, `chore:`, `docs:`, `ci:`). Mínimo cinco Pull Requests fechados no GitHub.
 - Comentário no código diz **por que**, nunca **o quê**. Teto: uma linha de comentário a cada dez de código.
 - Nenhum segredo commitado. `.env.example` tem as chaves com valor de exemplo; `.env` fica no `.gitignore`.
 
@@ -46,7 +46,7 @@ Classes de entrada que a spec implica mas nenhum critério de aceite exercita. C
 ```
 smartspace-projeto/
 ├── docker-compose.yml          Orquestra postgres, core, gateway, web
-├── .gitlab-ci.yml              lint, test, docker build dos três serviços
+├── .github/workflows/ci.yml   lint, test, docker build dos três serviços
 ├── .env.example                Chaves de ambiente com valor de exemplo
 ├── .gitignore
 ├── README.md                   O que é, como rodar, por que a fronteira existe
@@ -103,7 +103,7 @@ smartspace-projeto/
 
 ### Task 1: Esqueleto do repositório, Docker e PostgreSQL de pé
 
-Nada compila ainda. O entregável é: `docker compose up -d postgres` sobe um PostgreSQL acessível e o repo existe no GitLab.
+Nada compila ainda. O entregável é: `docker compose up -d postgres` sobe um PostgreSQL acessível e o repo existe no GitHub.
 
 **Files:**
 - Create: `.gitignore`, `.env.example`, `docker-compose.yml`, `README.md`
@@ -190,7 +190,7 @@ docker compose ps --format '{{.Service}} {{.State}} {{.Health}}'
 
 Expected: `postgres running healthy`
 
-- [ ] **Step 7: Commit e primeiro Merge Request**
+- [ ] **Step 7: Commit e primeiro Pull Request**
 
 ```bash
 git init -b main
@@ -198,7 +198,7 @@ git add .gitignore .env.example docker-compose.yml specs/
 git commit -m "chore: esqueleto do repositorio e postgres em container"
 ```
 
-Criar o projeto no GitLab, adicionar o remote, enviar `main`. A partir daqui cada task vive numa branch `feat/<nome>` e fecha por Merge Request.
+Criar o repositorio no GitHub, adicionar o remote, enviar `main`. A partir daqui cada task vive numa branch `feat/<nome>` e fecha por Pull Request.
 
 ---
 
@@ -3848,12 +3848,12 @@ git commit -m "feat: inbox com thread, atribuicao, resolucao e atualizacao ao vi
 
 ---
 
-### Task 11: Containers dos três serviços e pipeline no GitLab
+### Task 11: Containers dos três serviços e pipeline no GitHub
 
 **Files:**
 - Create: `core/Dockerfile`, `gateway/Dockerfile`, `web/Dockerfile`, `web/nginx.conf`
 - Modify: `docker-compose.yml`
-- Create: `.gitlab-ci.yml`
+- Create: `.github/workflows/ci.yml`
 
 **Interfaces:**
 - Consumes: os três serviços das Tasks 2 a 10.
@@ -4011,7 +4011,7 @@ docker compose ps --format '{{.Service}} {{.State}}'
 
 Expected: `postgres`, `core`, `gateway`, `web` todos `running`. Abrir `http://localhost:8081` e entrar.
 
-- [ ] **Step 6: Escrever `.gitlab-ci.yml`**
+- [ ] **Step 6: Escrever `.github/workflows/ci.yml`**
 
 ```yaml
 stages: [lint, test, build]
@@ -4090,8 +4090,8 @@ Expected: pipeline verde. Se `test:core` falhar por Docker inacessível, confirm
 - [ ] **Step 8: Commit**
 
 ```bash
-git add core/Dockerfile gateway/Dockerfile web/Dockerfile web/nginx.conf docker-compose.yml .gitlab-ci.yml
-git commit -m "ci: containers dos tres servicos e pipeline no GitLab"
+git add core/Dockerfile gateway/Dockerfile web/Dockerfile web/nginx.conf docker-compose.yml .github/workflows/ci.yml
+git commit -m "ci: containers dos tres servicos e pipeline no GitHub"
 ```
 
 ---
@@ -4174,7 +4174,7 @@ cd gateway && npm test      # contrato de canal e rotas
 ## Stack
 
 Java 21 · Spring Boot 3.3 · Spring Security · JPA · Flyway · PostgreSQL 16 ·
-Node 24 · TypeScript · Fastify · React 19 · Bootstrap 5 · Docker Compose · GitLab CI
+Node 24 · TypeScript · Fastify · React 19 · Bootstrap 5 · Docker Compose · GitHub Actions
 ```
 
 - [ ] **Step 3: Rodar o critério de aceite inteiro e colar a saída**
@@ -4196,7 +4196,7 @@ git commit -m "docs: README com evidencia de execucao e pagina de defesa"
 
 ## Self-Review
 
-**1. Cobertura da spec.** Os nove critérios de aceite têm task: 1 → Task 11; 2 → Task 3; 3 → Tasks 5 e 7; 4 → Tasks 8 e 12; 5 → Task 6; 6 → Tasks 2, 3, 5, 6, 7, 8; 7 → Task 10; 8 → Task 11; 9 → Tasks 1 a 12 (uma branch e um Merge Request por task). O "Fora de escopo" da spec não ganhou task nenhuma, como deve ser.
+**1. Cobertura da spec.** Os nove critérios de aceite têm task: 1 → Task 11; 2 → Task 3; 3 → Tasks 5 e 7; 4 → Tasks 8 e 12; 5 → Task 6; 6 → Tasks 2, 3, 5, 6, 7, 8; 7 → Task 10; 8 → Task 11; 9 → Tasks 1 a 12 (uma branch e um Pull Request por task). O "Fora de escopo" da spec não ganhou task nenhuma, como deve ser.
 
 **2. Placeholders.** Nenhum "TBD" ou "implementar depois". Os dois pontos que dependem de ação humana — gravar o GIF (Task 12, Step 1) e criar o bot no `@BotFather` (Task 8, Step 7) — são passos com comando e resultado esperado, não lacunas. O hash BCrypt do seed é gerado em código (`DataInitializer`), não um valor a preencher.
 

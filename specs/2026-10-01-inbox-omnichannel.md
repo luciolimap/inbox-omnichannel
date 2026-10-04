@@ -13,7 +13,7 @@ pelo mesmo canal de origem.
 Quem avalia roda `docker compose up` e usa a aplicação em um comando. Cada
 requisito listado na vaga tem um lugar visível no código: Java no domínio,
 Node na borda dos canais, React + Bootstrap na interface, PostgreSQL nos dados,
-GitLab com Merge Requests no processo.
+GitHub com Pull Requests no processo.
 
 ## Critério de aceite
 
@@ -96,12 +96,12 @@ e não há scroll horizontal. Verificado em screenshot no `README.md`.
 
 ### 8. Pipeline verde
 
-`.gitlab-ci.yml` com jobs de lint, teste e `docker build` dos três serviços.
+`.github/workflows/ci.yml` com jobs de lint, teste e `docker build` dos três serviços.
 Esperado: pipeline verde no último commit da branch principal, link no `README.md`.
 
 ### 9. Histórico de processo visível
 
-Pelo menos cinco Merge Requests fechados no GitLab, cada um com descrição do que
+Pelo menos cinco Pull Requests fechados no GitHub, cada um com descrição do que
 entrega, e commits em Conventional Commits.
 
 ## Fora de escopo

@@ -54,7 +54,7 @@ Vaga fecha em 08/10/2026. Restam 5 dias.
   descasado do `Content-Length` (`FST_ERR_CTP_INVALID_CONTENT_LENGTH`).
 
 - **Task 11 fechada.** `core/Dockerfile`, `gateway/Dockerfile`, `web/Dockerfile`,
-  `web/nginx.conf`, `docker-compose.yml` com os quatro serviços e `.gitlab-ci.yml`.
+  `web/nginx.conf`, `docker-compose.yml` com os quatro serviços e `.github/workflows/ci.yml`.
   `docker compose up -d --build` → `postgres core gateway web` todos `running`.
   Volta completa provada pelos containers: webhook simulado, conversa criada,
   resposta com `deliveryStatus: SENT`, mensagem no `/simulated/outbox` do gateway.
@@ -84,8 +84,8 @@ Vaga fecha em 08/10/2026. Restam 5 dias.
 
 3. **Repositório remoto ainda não existe.** Deve ser **privado** e **só na conta do Lucio**
    (`luciolimap`): nada de colaborador, nada de rastro de IA no histórico ou na descrição.
-   `glab` não está instalado. Decidir entre `winget install glab.glab` ou criar o projeto no
-   GitLab pela web e só acrescentar o remote. `gh` já está autenticado para o espelho no GitHub.
+   O remoto é GitHub, não GitLab: `gh` já está autenticado, então `gh repo create` resolve
+   sem instalar nada. O processo passa a ser Pull Request em vez de Merge Request.
 
 3. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
