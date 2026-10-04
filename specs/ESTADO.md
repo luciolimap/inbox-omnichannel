@@ -134,6 +134,22 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
   efeitos do `Inbox` correm antes dos do pai e as chamadas saíam sem `Authorization`;
   e o `/ws` fechando com `4401` não avisava ninguém, então o inbox congelava calado.
 
+- **Senha de demonstração só fora de produção, commit `121349a`.** Spec em
+  `specs/2026-10-04-seed-sem-senha-conhecida.md`. Com o perfil `prod` ativo o seed exige
+  `SEED_ADMIN_PASSWORD`; fora dele `senha123` segue valendo, porque é o critério 1 da
+  spec principal e o caminho de quem avalia. A senha é resolvida **dentro** do runner,
+  depois do `count()`: resolver antes faria instância de produção com banco já povoado
+  parar de subir exigindo valor que nunca seria usado. Perfil que chega por grupo também
+  é pego (`--spring.profiles.active=live --spring.profiles.group.live=prod`).
+  `./mvnw -B test` → `Tests run: 37, Failures: 0`.
+
+  **A revisão salvou a regra de nascer inerte:** o `docker-compose.yml` não repassava
+  `SPRING_PROFILES_ACTIVE` ao serviço `core`, e o compose só substitui variável
+  declarada em `environment`. O `README` prometia um interruptor que, pelo caminho que
+  ele mesmo manda rodar, não ligava nada — a instância continuava nascendo com
+  `senha123`. Lição que vale além deste caso: guarda que depende de configuração precisa
+  ter o caminho de ativação testado, não só a regra.
+
 - **Task 12 parcial.** `README.md` e `docs/defesa.md` escritos. Critérios de aceite
   1, 2, 3, 5, 6 rodados verdes: quatro serviços `running`; `401` sem token e token
   emitido com token; webhook cria conversa `WHATSAPP`; `Agente Demo` e `RESOLVED`
@@ -166,10 +182,8 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
    de engenharia, mas no formato de plano de agente.
 
 5. **Achados da revisão que seguem abertos, cada um uma decisão sua.**
-   `DataInitializer` semeia `agente@` e `admin@` com `senha123` sem guarda de profile,
-   e o `README` publica a credencial: qualquer instância exposta nasce com um ADMIN
-   conhecido. O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue
-   mas a spec lista filtros em "Fora de escopo" — decidir se fica ou se a spec muda.
+   O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue mas a spec
+   lista filtros em "Fora de escopo" — decidir se fica ou se a spec muda.
    `ConversationService.list` carrega todas as conversas e, por lazy, todas as mensagens
    de cada uma só para montar a prévia (N+1), e o front recarrega a lista inteira a cada
    evento WebSocket, por cliente aberto. Sem rate limit no gateway, N sockets ou N
@@ -190,7 +204,7 @@ Vaga fecha em 08/10/2026. Restam 4 dias.
 | 3 | Webhook cria conversa | verde |
 | 4 | Telegram ponta a ponta, GIF com celular | **falta**, itens 1 e 2 |
 | 5 | Atribuição e resolução persistem | verde |
-| 6 | Teste do core e do gateway | verde, `Tests run: 29`, `Tests 28 passed`, e `Tests 7 passed` no web |
+| 6 | Teste do core e do gateway | verde, `Tests run: 37`, `Tests 28 passed`, e `Tests 7 passed` no web |
 | 7 | Responsivo a 375px, screenshot | **falta**, item 2 |
 | 8 | Pipeline verde com link no `README.md` | verde, badge em `main` |
 | 9 | Cinco Pull Requests fechados | **não fecha**, item 3 |
