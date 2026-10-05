@@ -1,4 +1,4 @@
-import { useAuth } from "./auth";
+import { useAuth } from "./auth-context";
 import { Login } from "./pages/Login";
 import { Inbox } from "./pages/Inbox";
 

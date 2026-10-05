@@ -1,18 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { aoExpirarSessao, api, ROTA_DE_LOGIN, setToken } from "./api";
-import {
-  guardarSessao, lerSessao, limparSessao, type Agent, type Session,
-} from "./session";
-
-interface AuthValue {
-  agent: Agent | null;
-  loading: boolean;
-  expirada: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthValue | null>(null);
+import { AuthContext, type AuthValue } from "./auth-context";
+import { guardarSessao, lerSessao, limparSessao, type Session } from "./session";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(lerSessao);
@@ -59,12 +48,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }), [session, loading, expirada]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthValue {
-  const valor = useContext(AuthContext);
-  if (valor === null) {
-    throw new Error("useAuth fora do AuthProvider");
-  }
-  return valor;
 }
