@@ -1,7 +1,7 @@
-# Estado em 04/10/2026 (fim da sessão)
+# Estado em 05/10/2026 (fim da sessão)
 
-Vaga fecha em 08/10/2026. Restam 4 dias, e o dia 08 é margem: a entrega é um link
-que alguém abre, então o trabalho real cabe em 05, 06 e 07.
+Vaga fecha em 08/10/2026. Restam 3 dias, e o dia 08 é margem: a entrega é um link
+que alguém abre, então o trabalho real cabe em 06 e 07.
 
 ## Retomar aqui
 
@@ -9,18 +9,19 @@ que alguém abre, então o trabalho real cabe em 05, 06 e 07.
 entregue e funciona; só não casa com o "Fora de escopo" da spec. Resolver isso não
 move nenhum critério de aceite, e os três que faltam movem.
 
-Ordem combinada para os próximos dias:
+O 05/10 gastou o dia no N+1, que virou o PR #2, mergeado. A evidência visual não
+andou: ela depende do Lucio e continua sendo o caminho crítico.
 
-1. **05/10 — caminho crítico, depende do Lucio.** Gravar `docs/inbox.gif` (Telegram
+Ordem combinada para os dois dias que restam:
+
+1. **06/10 — caminho crítico, depende do Lucio.** Gravar `docs/inbox.gif` (Telegram
    ponta a ponta, celular visível, critério 4) e `docs/mobile.png` (375px sem scroll
-   horizontal, critério 7). O `README.md` já referencia os dois arquivos, então hoje a
-   capa do projeto abre com dois links quebrados — é a primeira coisa que o avaliador vê.
+   horizontal, critério 7). O `README.md` já referencia os dois arquivos, então a capa
+   do projeto abre com dois links quebrados — é a primeira coisa que o avaliador vê.
    O `setWebhook` agora precisa de `secret_token`; o comando completo está no item 1 de
-   "Pendente para retomar".
-2. **06/10 — uma tarefa, um Pull Request.** É o único jeito de mexer no critério 9, que
-   pede cinco PRs e tem um. Candidatos, nesta ordem: N+1 do `ConversationService.list`
-   com a recarga por evento, depois os quatro warnings do `oxlint`.
-3. **07/10 — polimento de entrega.** Reler o `README` inteiro como avaliador, tornar o
+   "Pendente para retomar". Sobrando tempo no dia, mais um Pull Request: os quatro
+   warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`.
+2. **07/10 — polimento de entrega.** Reler o `README` inteiro como avaliador, tornar o
    repositório público (o badge do CI só renderiza para quem tem acesso), conferir o
    badge verde, e rodar `docker compose up -d` num clone limpo para provar que sobe do
    zero.
@@ -179,6 +180,32 @@ Ordem combinada para os próximos dias:
   persistem depois de `docker compose restart core`; `./mvnw -B test` →
   `Tests run: 27, Failures: 0`; `npm test` do gateway → `Tests 12 passed (12)`.
 
+- **Lista de conversas sem N+1, PR #2 mergeado em `main` (`0bfdcff`).** Spec em
+  `specs/2026-10-05-lista-sem-n-mais-um.md`. `GET /api/conversations` fazia mais de três
+  consultas por conversa: a lista, as mensagens de cada uma só para montar a prévia de
+  uma linha, o contato e o agente atribuído. Agora são duas consultas fixas — um
+  `@EntityGraph` traz contato e agente junto com a lista, e `findUltimaDeCadaConversa`
+  busca as prévias em lote. A prévia chega em `ConversationSummary.from` como parâmetro,
+  então ninguém toca mais a coleção lazy. No front, `agrupar()` em `web/src/realtime.ts`
+  junta a rajada de eventos do WebSocket numa recarga só.
+  `./mvnw -B test` → `Tests run: 38`; `npm test` do web → `Tests 11 passed`.
+
+  **A revisão achou o N+1 ainda de pé e o teste que o escondia.** A consulta em lote
+  devolvia a entidade `Message`, que tem `sentByAgent` EAGER, e a lista normal do inbox
+  tem resposta de agente como última mensagem: cada agente remetente distinto custava um
+  select. O teste de aceite não via nada porque semeava só `Message.inbound`, que tem
+  `sentByAgent` nulo. Com remetente por conversa a medida deu 4 e 6, e a troca para
+  projeção de interface fechou. Lição que vale além deste caso: teste de contagem de
+  consulta tem de semear o caminho **de produção**, senão ele mede um cenário que não
+  existe. O terceiro achado era starvation: `agrupar()` era debounce só de borda de
+  saída, e evento a cada 50ms reiniciava a janela de 100ms para sempre — a lista
+  congelava pela rajada inteira. `TETO_DE_ESPERA_MS` de 500ms resolve.
+
+  Dois achados recusados e escritos no código: o `in (:ids)` sem limite trava em 65535
+  parâmetros no PostgreSQL, mas o conserto é paginar, que está em "Fora de escopo"
+  (marcado com `ponytail:`); e a prévia por `max(id)` pode discordar da ordenação por
+  `lastMessageAt` sob concorrência na mesma conversa, divergência cosmética.
+
 ## Pendente para retomar
 
 1. **Task 8 Step 7, prova ponta a ponta do Telegram: depende do Lucio.** Criar o bot no
@@ -197,9 +224,9 @@ Ordem combinada para os próximos dias:
    <http://localhost:8081> no DevTools a 375px e conferir que não há scroll
    horizontal e que a lista sai de cena com conversa aberta.
 
-3. **Critério de aceite 9 não fecha.** Ele pede pelo menos cinco Pull Requests fechados,
-   e os treze commits entraram num PR só (#1). Não tem conserto retroativo: tarefa nova
-   fecha por PR separado.
+3. **Critério de aceite 9 em 2 de 5.** Ele pede pelo menos cinco Pull Requests
+   fechados. O #1 levou os treze primeiros commits; o #2 levou o N+1. Não tem conserto
+   retroativo: cada tarefa nova fecha por PR separado.
 
 4. Decidir se `specs/` entra no repositório público da candidatura. O conteúdo mostra processo
    de engenharia, mas no formato de plano de agente.
@@ -207,12 +234,12 @@ Ordem combinada para os próximos dias:
 5. **Achados da revisão que seguem abertos, cada um uma decisão sua.**
    O filtro por status (`Inbox.tsx`, `ConversationController`) está entregue mas a spec
    lista filtros em "Fora de escopo" — decidir se fica ou se a spec muda.
-   `ConversationService.list` carrega todas as conversas e, por lazy, todas as mensagens
-   de cada uma só para montar a prévia (N+1), e o front recarrega a lista inteira a cada
-   evento WebSocket, por cliente aberto. Sem rate limit no gateway, N sockets ou N
-   webhooks ainda provocam N validações de JWT no core; está no "Fora de escopo" da spec
-   do `/ws`. Quatro warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`,
-   nenhum quebra o build.
+   A lista não tem paginação: o `in (:ids)` da consulta de prévias trava em 65535
+   parâmetros no PostgreSQL, e é o teto que o `ponytail:` em `ConversationService.list`
+   nomeia. Sem rate limit no gateway, N sockets ou N webhooks ainda provocam N
+   validações de JWT no core; está no "Fora de escopo" da spec do `/ws`. Quatro
+   warnings do `oxlint` em `Inbox.tsx`, `realtime.ts` e `auth.tsx`, nenhum quebra o
+   build — candidatos ao próximo Pull Request.
 
 6. **Avisos do Actions, nenhum quebra o build.** `actions/setup-java` já está em `@v5`.
    Restam `actions/checkout@v4` e `actions/setup-node@v4`, que ainda miram Node 20 e o
@@ -227,10 +254,10 @@ Ordem combinada para os próximos dias:
 | 3 | Webhook cria conversa | verde |
 | 4 | Telegram ponta a ponta, GIF com celular | **falta**, itens 1 e 2 |
 | 5 | Atribuição e resolução persistem | verde |
-| 6 | Teste do core e do gateway | verde, `Tests run: 37`, `Tests 28 passed`, e `Tests 7 passed` no web |
+| 6 | Teste do core e do gateway | verde, `Tests run: 38`, `Tests 28 passed`, e `Tests 11 passed` no web |
 | 7 | Responsivo a 375px, screenshot | **falta**, item 2 |
 | 8 | Pipeline verde com link no `README.md` | verde, badge em `main` |
-| 9 | Cinco Pull Requests fechados | **não fecha**, item 3 |
+| 9 | Cinco Pull Requests fechados | **2 de 5**, item 3 |
 
 ## Decisões tomadas que não se refazem
 
@@ -260,6 +287,12 @@ Ordem combinada para os próximos dias:
   banco vazio; o `InboundApiIT` tem `@Transactional` em um método só e commita conversa
   nos outros. Agora é `containsSubsequence`, que prova a ordem relativa. A falha reproduz
   com `./mvnw -B test -Dsurefire.runOrder=reversealphabetical`.
+- A prévia da lista sai de `max(m.id)`, não de `max(m.createdAt)`: duas mensagens podem
+  nascer no mesmo instante e a subconsulta devolveria duas linhas para a mesma conversa,
+  estourando o `toMap`. O preço está escrito em `MessageRepository`.
+- A consulta de prévias devolve projeção de interface, não `Message`. A entidade tem
+  `sentByAgent` EAGER, e hidratá-la custava um select por agente remetente distinto da
+  lista — o N+1 voltava pela porta dos fundos, no cenário em que o inbox sempre está.
 - O surefire tem `<includes>` com `**/*IT.java`. O critério de aceite 6 roda `./mvnw test`, e o
   padrão do surefire só pega `*Test`: sem o include, os testes que sobem o PostgreSQL ficavam
   de fora e `./mvnw test` passava com um teste só.
