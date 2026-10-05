@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { expirarSessao, tokenAtual } from "./api";
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:3000/ws";
@@ -49,7 +49,16 @@ export function agrupar(acao: () => void, janelaMs = JANELA_DE_AGRUPAMENTO_MS,
 
 export function useRealtime(onEvent: () => void): void {
   const callback = useRef(onEvent);
-  callback.current = onEvent;
+  // Num efeito, nao no corpo: escrever ref durante o render e impuro e o React
+  // nao garante quando acontece sob render concorrente.
+  //
+  // useLayoutEffect, nao useEffect: no caminho do teto de espera o agrupar()
+  // chama a acao sincrono dentro do onmessage, e com efeito passivo esse evento
+  // cabe entre o commit e o flush, usando o callback do render anterior. O
+  // layout effect roda no commit, antes de o navegador entregar outra task.
+  useLayoutEffect(() => {
+    callback.current = onEvent;
+  });
 
   useEffect(() => {
     let socket: WebSocket | null = null;

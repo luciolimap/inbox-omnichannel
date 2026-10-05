@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, authHeader } from "../api";
-import { useAuth } from "../auth";
+import { useAuth } from "../auth-context";
 import type { Agent } from "../session";
 import { useRealtime } from "../realtime";
 import { ConversationList, type ConversationSummary } from "../components/ConversationList";
@@ -37,7 +37,11 @@ export function Inbox() {
     setDetail(await api.get<ConversationDetail>(`/api/conversations/${id}`));
   }, []);
 
+  // Busca inicial contra o core e sincronizacao com sistema externo, que e o uso
+  // que o texto da propria regra autoriza. Nao ha valor para derivar no render:
+  // ele vem da rede.
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     void carregarLista();
   }, [carregarLista]);
 
@@ -47,8 +51,10 @@ export function Inbox() {
     void api.get<Agent[]>("/api/agents").then(setAgents).catch(() => setAgents([]));
   }, []);
 
+  // Mesma razao da lista: a conversa aberta vem do core, nao do render.
   useEffect(() => {
     if (selectedId !== null) {
+      // oxlint-disable-next-line react/set-state-in-effect
       void carregarDetalhe(selectedId);
     }
   }, [selectedId, carregarDetalhe]);
