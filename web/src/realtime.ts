@@ -6,6 +6,21 @@ const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:3000/ws";
 // Espelha CODIGO_CREDENCIAL_RECUSADA do gateway.
 const CODIGO_CREDENCIAL_RECUSADA = 4401;
 
+// Uma acao do agente gera mais de um evento: a mensagem persistida e a
+// confirmacao de entrega chegam separadas. Sem agrupar, cada uma recarrega a
+// lista e a conversa aberta, por aba. 100ms ainda parece instantaneo.
+export const JANELA_DE_AGRUPAMENTO_MS = 100;
+
+export function agrupar(acao: () => void, janelaMs = JANELA_DE_AGRUPAMENTO_MS) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const disparar = () => {
+    clearTimeout(timer);
+    timer = setTimeout(acao, janelaMs);
+  };
+  disparar.cancelar = () => clearTimeout(timer);
+  return disparar;
+}
+
 export function useRealtime(onEvent: () => void): void {
   const callback = useRef(onEvent);
   callback.current = onEvent;
@@ -14,6 +29,7 @@ export function useRealtime(onEvent: () => void): void {
     let socket: WebSocket | null = null;
     let timer: number | undefined;
     let ativo = true;
+    const recarregar = agrupar(() => callback.current());
 
     function conectar() {
       const token = tokenAtual();
@@ -24,7 +40,7 @@ export function useRealtime(onEvent: () => void): void {
       }
       socket = new WebSocket(WS_URL);
       socket.onopen = () => socket?.send(JSON.stringify({ token }));
-      socket.onmessage = () => callback.current();
+      socket.onmessage = () => recarregar();
       // Reconexao fixa em 3s de proposito: backoff exponencial so paga quando o
       // servidor cai por minutos, e aqui os dois sobem no mesmo compose.
       //
@@ -46,6 +62,7 @@ export function useRealtime(onEvent: () => void): void {
     return () => {
       ativo = false;
       window.clearTimeout(timer);
+      recarregar.cancelar();
       socket?.close();
     };
   }, []);

@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ConversationService {
@@ -110,7 +112,18 @@ public class ConversationService {
         List<Conversation> encontradas = status == null
                 ? conversations.findAllByOrderByLastMessageAtDesc()
                 : conversations.findByStatusOrderByLastMessageAtDesc(status);
-        return encontradas.stream().map(ConversationSummary::from).toList();
+        if (encontradas.isEmpty()) {
+            // Lista vazia precisa sair antes: in (:ids) com colecao vazia nao e SQL valido.
+            return List.of();
+        }
+        List<Long> ids = encontradas.stream().map(Conversation::getId).toList();
+        Map<Long, String> previas = messages.findUltimaDeCadaConversa(ids).stream()
+                // getConversation() devolve proxy lazy, e ler o id dele nao abre
+                // consulta: o id ja vem na propria chave estrangeira.
+                .collect(Collectors.toMap(m -> m.getConversation().getId(), Message::getBody));
+        return encontradas.stream()
+                .map(c -> ConversationSummary.from(c, previas.getOrDefault(c.getId(), "")))
+                .toList();
     }
 
     @Transactional(readOnly = true)
