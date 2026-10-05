@@ -116,11 +116,13 @@ public class ConversationService {
             // Lista vazia precisa sair antes: in (:ids) com colecao vazia nao e SQL valido.
             return List.of();
         }
+        // ponytail: um in (:ids) com a lista inteira; o PostgreSQL trava em 65535
+        // parametros por statement, e o conserto de verdade e paginar a lista.
         List<Long> ids = encontradas.stream().map(Conversation::getId).toList();
         Map<Long, String> previas = messages.findUltimaDeCadaConversa(ids).stream()
-                // getConversation() devolve proxy lazy, e ler o id dele nao abre
-                // consulta: o id ja vem na propria chave estrangeira.
-                .collect(Collectors.toMap(m -> m.getConversation().getId(), Message::getBody));
+                .collect(Collectors.toMap(
+                        MessageRepository.PreviaDeConversa::getConversationId,
+                        MessageRepository.PreviaDeConversa::getBody));
         return encontradas.stream()
                 .map(c -> ConversationSummary.from(c, previas.getOrDefault(c.getId(), "")))
                 .toList();

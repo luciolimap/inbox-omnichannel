@@ -11,13 +11,39 @@ const CODIGO_CREDENCIAL_RECUSADA = 4401;
 // lista e a conversa aberta, por aba. 100ms ainda parece instantaneo.
 export const JANELA_DE_AGRUPAMENTO_MS = 100;
 
-export function agrupar(acao: () => void, janelaMs = JANELA_DE_AGRUPAMENTO_MS) {
+// Teto de espera: evento a cada 50ms reinicia a janela para sempre, e sem teto a
+// lista congelaria pela rajada inteira. Dois agentes trabalhando juntos ou
+// reentrega de webhook do Telegram sustentam essa taxa.
+export const TETO_DE_ESPERA_MS = 500;
+
+export function agrupar(acao: () => void, janelaMs = JANELA_DE_AGRUPAMENTO_MS,
+                        tetoMs = TETO_DE_ESPERA_MS) {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const disparar = () => {
+  let primeiroSuprimido: number | undefined;
+
+  const rodar = () => {
     clearTimeout(timer);
-    timer = setTimeout(acao, janelaMs);
+    timer = undefined;
+    primeiroSuprimido = undefined;
+    acao();
   };
-  disparar.cancelar = () => clearTimeout(timer);
+
+  const disparar = () => {
+    primeiroSuprimido ??= Date.now();
+    if (Date.now() - primeiroSuprimido >= tetoMs) {
+      rodar();
+      return;
+    }
+    clearTimeout(timer);
+    timer = setTimeout(rodar, janelaMs);
+  };
+
+  disparar.cancelar = () => {
+    clearTimeout(timer);
+    timer = undefined;
+    primeiroSuprimido = undefined;
+  };
+
   return disparar;
 }
 

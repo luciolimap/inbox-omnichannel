@@ -1,5 +1,8 @@
 package com.smartspace.inbox.conversation;
 
+import com.smartspace.inbox.agent.Agent;
+import com.smartspace.inbox.agent.AgentRepository;
+import com.smartspace.inbox.agent.Role;
 import com.smartspace.inbox.contact.Contact;
 import com.smartspace.inbox.contact.ContactRepository;
 import com.smartspace.inbox.support.PostgresIT;
@@ -29,6 +32,9 @@ class ConversationListQueryCountIT extends PostgresIT {
     ConversationRepository conversations;
 
     @Autowired
+    AgentRepository agents;
+
+    @Autowired
     ConversationService service;
 
     @Autowired
@@ -36,11 +42,13 @@ class ConversationListQueryCountIT extends PostgresIT {
 
     private final List<Long> conversasSemeadas = new ArrayList<>();
     private final List<Long> contatosSemeados = new ArrayList<>();
+    private final List<Long> agentesSemeados = new ArrayList<>();
 
     @AfterEach
     void limpar() {
         conversasSemeadas.forEach(conversations::deleteById);
         contatosSemeados.forEach(contacts::deleteById);
+        agentesSemeados.forEach(agents::deleteById);
     }
 
     @Test
@@ -63,12 +71,21 @@ class ConversationListQueryCountIT extends PostgresIT {
         return estatisticas.getPrepareStatementCount();
     }
 
+    // A ultima mensagem e resposta de agente, e de um agente por conversa: e o
+    // estado normal do inbox, e e o unico que expoe o sentByAgent EAGER de
+    // Message. Com inbound so, ou com o mesmo agente em todas, o cache de
+    // primeiro nivel esconde o select extra e o teste passa com o N+1 vivo.
+    // A conversa fica sem assignedAgent de proposito: atribuida, o @EntityGraph
+    // da lista ja traria o agente e o select nao apareceria.
     private void semear(String externalId) {
         Contact contact = contacts.save(new Contact(Channel.TELEGRAM, externalId, "Cliente"));
         contatosSemeados.add(contact.getId());
+        Agent remetente = agents.save(new Agent(
+                "Agente " + externalId, externalId + "@teste.local", "hash", Role.AGENT));
+        agentesSemeados.add(remetente.getId());
         Conversation conversation = new Conversation(contact);
         conversation.addMessage(Message.inbound("primeira de " + externalId, externalId + "-m1"));
-        conversation.addMessage(Message.inbound("segunda de " + externalId, externalId + "-m2"));
+        conversation.addMessage(Message.outbound("resposta de " + externalId, remetente));
         conversasSemeadas.add(conversations.save(conversation).getId());
     }
 }

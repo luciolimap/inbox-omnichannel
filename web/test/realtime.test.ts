@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { JANELA_DE_AGRUPAMENTO_MS, agrupar } from "../src/realtime";
+import { JANELA_DE_AGRUPAMENTO_MS, TETO_DE_ESPERA_MS, agrupar } from "../src/realtime";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -32,6 +32,22 @@ describe("eventos do gateway agrupados", () => {
     vi.advanceTimersByTime(JANELA_DE_AGRUPAMENTO_MS);
 
     expect(recargas).toBe(2);
+  });
+
+  it("rajada sem pausa ainda recarrega dentro do teto de espera", () => {
+    // Evento a cada 50ms reinicia a janela de 100ms para sempre: sem teto, a
+    // lista e a conversa aberta congelam pelo tempo inteiro da rajada.
+    vi.useFakeTimers();
+    let recargas = 0;
+    const recarregar = agrupar(() => { recargas += 1; });
+
+    for (let i = 0; i < 20; i += 1) {
+      recarregar();
+      vi.advanceTimersByTime(JANELA_DE_AGRUPAMENTO_MS / 2);
+    }
+
+    expect(recargas).toBeGreaterThanOrEqual(1);
+    expect(TETO_DE_ESPERA_MS).toBeGreaterThan(JANELA_DE_AGRUPAMENTO_MS);
   });
 
   it("cancelar descarta a recarga pendente", () => {
