@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ConversationService {
@@ -110,7 +112,20 @@ public class ConversationService {
         List<Conversation> encontradas = status == null
                 ? conversations.findAllByOrderByLastMessageAtDesc()
                 : conversations.findByStatusOrderByLastMessageAtDesc(status);
-        return encontradas.stream().map(ConversationSummary::from).toList();
+        if (encontradas.isEmpty()) {
+            // Lista vazia precisa sair antes: in (:ids) com colecao vazia nao e SQL valido.
+            return List.of();
+        }
+        // ponytail: um in (:ids) com a lista inteira; o PostgreSQL trava em 65535
+        // parametros por statement, e o conserto de verdade e paginar a lista.
+        List<Long> ids = encontradas.stream().map(Conversation::getId).toList();
+        Map<Long, String> previas = messages.findUltimaDeCadaConversa(ids).stream()
+                .collect(Collectors.toMap(
+                        MessageRepository.PreviaDeConversa::getConversationId,
+                        MessageRepository.PreviaDeConversa::getBody));
+        return encontradas.stream()
+                .map(c -> ConversationSummary.from(c, previas.getOrDefault(c.getId(), "")))
+                .toList();
     }
 
     @Transactional(readOnly = true)

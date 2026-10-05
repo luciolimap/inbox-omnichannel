@@ -8,10 +8,10 @@ public record ConversationSummary(Long id, String channel, String status, String
                                   String contactExternalId, AgentDto assignedAgent,
                                   String lastMessagePreview, Instant lastMessageAt) {
 
-    public static ConversationSummary from(Conversation conversation) {
-        String previa = conversation.getMessages().isEmpty()
-                ? ""
-                : conversation.getMessages().get(conversation.getMessages().size() - 1).getBody();
+    // A previa chega de fora porque quem monta a lista a busca em lote. Ler
+    // conversation.getMessages() aqui carregaria todas as mensagens da conversa
+    // para usar uma linha, uma vez por conversa da lista.
+    public static ConversationSummary from(Conversation conversation, String lastMessagePreview) {
         return new ConversationSummary(
                 conversation.getId(),
                 conversation.getChannel().name(),
@@ -20,7 +20,7 @@ public record ConversationSummary(Long id, String channel, String status, String
                 conversation.getContact().getExternalId(),
                 conversation.getAssignedAgent() == null
                         ? null : AgentDto.from(conversation.getAssignedAgent()),
-                previa,
+                lastMessagePreview,
                 conversation.getLastMessageAt());
     }
 }
